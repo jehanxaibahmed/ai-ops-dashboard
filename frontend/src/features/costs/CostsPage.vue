@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted } from 'vue'
+import { onBeforeUnmount, onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import AppButton from '@/shared/components/AppButton.vue'
 import Card from '@/shared/components/Card.vue'
@@ -7,47 +7,36 @@ import EmptyState from '@/shared/components/EmptyState.vue'
 import PageHeader from '@/shared/components/PageHeader.vue'
 import StatCard from '@/shared/components/StatCard.vue'
 import ChartCard from '@/shared/components/charts/ChartCard.vue'
+import { useGlobalFilters } from '@/shared/filters/useGlobalFilters'
 import { useCatalogStore } from '@/shared/stores/catalog'
 import { formatDay } from '@/shared/utils/dates'
 import { formatCompact, formatCurrency, formatPercent } from '@/shared/utils/format'
 import BreakdownTable from './components/BreakdownTable.vue'
 import CostByModelChart from './components/CostByModelChart.vue'
 import DailyCostChart from './components/DailyCostChart.vue'
-import { RANGE_OPTIONS, useCostsStore } from './useCostsStore'
+import { useCostsStore } from './useCostsStore'
 
 const store = useCostsStore()
-const { report, loading, error, rangeDays } = storeToRefs(store)
+const { report, loading, error } = storeToRefs(store)
 const catalog = useCatalogStore()
 
 /** Fixed colour slot per model, taken from catalog order. */
 const colorIndex = (model: string) => Math.max(0, catalog.models.findIndex((m) => m.id === model))
 
+const filters = useGlobalFilters()
+watch(filters.key, () => store.setQuery(filters.query.value))
+
 let disconnect: (() => void) | undefined
 onMounted(() => {
   void catalog.ensureLoaded()
-  void store.load()
+  void store.setQuery(filters.query.value)
   disconnect = store.connect()
 })
 onBeforeUnmount(() => disconnect?.())
 </script>
 
 <template>
-  <PageHeader title="Costs" subtitle="Model spend by day, model and pipeline">
-    <template #actions>
-      <div class="range" role="group" aria-label="Date range">
-        <AppButton
-          v-for="days in RANGE_OPTIONS"
-          :key="days"
-          size="sm"
-          :variant="rangeDays === days ? 'primary' : 'secondary'"
-          :aria-pressed="rangeDays === days"
-          @click="store.setRange(days)"
-        >
-          Last {{ days }} days
-        </AppButton>
-      </div>
-    </template>
-  </PageHeader>
+  <PageHeader title="Costs" subtitle="Model spend by day, model and pipeline" />
 
   <p v-if="error" class="error" role="alert">
     {{ error }} <AppButton size="sm" @click="store.load()">Retry</AppButton>
@@ -108,10 +97,6 @@ onBeforeUnmount(() => disconnect?.())
 </template>
 
 <style scoped>
-.range {
-  display: flex;
-  gap: var(--space-1);
-}
 .error {
   color: var(--color-danger);
 }

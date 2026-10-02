@@ -20,7 +20,8 @@ public class JobSimulationEngineTests
     {
         var options = new SimulationOptions { RandomSeed = 7, ArrivalRate = 1.0, MaxConcurrentJobs = 3 };
         configure?.Invoke(options);
-        return new JobSimulationEngine(_repo, _evaluations, _notifier, new SampleCatalog(), _clock, Options.Create(options));
+        var opts = Options.Create(options);
+        return new JobSimulationEngine(_repo, _evaluations, _notifier, new SampleCatalog(), _clock, opts, new SimulationControl(opts));
     }
 
     private async Task RunTicks(JobSimulationEngine engine, int ticks)

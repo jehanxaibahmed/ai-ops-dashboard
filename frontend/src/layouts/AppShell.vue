@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { routes } from '@/app/router'
+import FilterBar from '@/shared/components/filters/FilterBar.vue'
 
 const route = useRoute()
 const navItems = computed(() =>
@@ -34,6 +35,7 @@ const navItems = computed(() =>
       </div>
     </aside>
     <main class="content">
+      <FilterBar />
       <slot />
     </main>
   </div>

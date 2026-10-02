@@ -8,6 +8,7 @@ public sealed record JobQueryParameters(
     JobStatus[]? Status,
     string[]? Pipeline,
     string[]? Model,
+    string[]? FailureCode,
     DateTimeOffset? From,
     DateTimeOffset? To,
     string? Search)
@@ -17,6 +18,7 @@ public sealed record JobQueryParameters(
         Statuses = Status ?? [],
         PipelineIds = Pipeline ?? [],
         Models = Model ?? [],
+        FailureCodes = FailureCode ?? [],
         From = From,
         To = To,
         Search = Search,

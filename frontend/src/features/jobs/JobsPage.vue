@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted } from 'vue'
+import { computed, onBeforeUnmount, onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import type { JobStatus } from '@/shared/api/types'
 import AppButton from '@/shared/components/AppButton.vue'
@@ -9,6 +9,7 @@ import PageHeader from '@/shared/components/PageHeader.vue'
 import PaginationBar from '@/shared/components/PaginationBar.vue'
 import { useNow } from '@/shared/composables/useNow'
 import { useRetry } from '@/shared/composables/useRetry'
+import { useGlobalFilters } from '@/shared/filters/useGlobalFilters'
 import { useCatalogStore } from '@/shared/stores/catalog'
 import JobDetailPanel from '@/shared/components/jobs/JobDetailPanel.vue'
 import JobsTable from './components/JobsTable.vue'
@@ -26,10 +27,14 @@ const status = computed<JobStatus | null>({
   set: (value) => void store.setQuery({ ...store.query, status: value ? [value] : undefined }),
 })
 
+const filters = useGlobalFilters()
+const applyFilters = () => store.setQuery({ ...filters.query.value, status: store.query.status })
+watch(filters.key, applyFilters)
+
 let disconnect: (() => void) | undefined
 onMounted(() => {
   void catalog.ensureLoaded()
-  void store.load()
+  void applyFilters()
   disconnect = store.connect()
 })
 onBeforeUnmount(() => disconnect?.())

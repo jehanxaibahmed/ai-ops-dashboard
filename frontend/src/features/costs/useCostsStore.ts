@@ -1,16 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref, shallowRef } from 'vue'
 import { getCostReport } from '@/shared/api/analytics'
-import type { CostReport } from '@/shared/api/types'
+import type { CostReport, JobQuery } from '@/shared/api/types'
 import { onJobUpdated } from '@/shared/realtime/jobsHub'
-import { startOfUtcDaysAgo } from '@/shared/utils/dates'
 import { throttle } from '@/shared/utils/throttle'
 
-export const RANGE_OPTIONS = [7, 14] as const
-export type RangeDays = (typeof RANGE_OPTIONS)[number]
-
 export const useCostsStore = defineStore('costs', () => {
-  const rangeDays = ref<RangeDays>(14)
+  const query = ref<JobQuery>({})
   const report = shallowRef<CostReport | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
@@ -20,7 +16,7 @@ export const useCostsStore = defineStore('costs', () => {
     const current = ++seq
     loading.value = true
     try {
-      const result = await getCostReport({ from: startOfUtcDaysAgo(rangeDays.value) })
+      const result = await getCostReport(query.value)
       if (current !== seq) return
       report.value = result
       error.value = null
@@ -31,8 +27,8 @@ export const useCostsStore = defineStore('costs', () => {
     }
   }
 
-  function setRange(days: RangeDays) {
-    rangeDays.value = days
+  function setQuery(next: JobQuery) {
+    query.value = next
     return load()
   }
 
@@ -47,5 +43,5 @@ export const useCostsStore = defineStore('costs', () => {
     }
   }
 
-  return { rangeDays, report, loading, error, load, setRange, connect }
+  return { query, report, loading, error, load, setQuery, connect }
 })

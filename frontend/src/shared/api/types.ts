@@ -73,6 +73,7 @@ export interface JobQuery {
   status?: JobStatus[]
   pipeline?: string[]
   model?: string[]
+  failureCode?: string[]
   from?: string
   to?: string
   search?: string
@@ -170,4 +171,11 @@ export interface AccuracyReport {
   rows: AccuracyRow[]
   daily: DailyAccuracy[]
   worstFields: FieldErrorStat[]
+}
+
+export interface SimulationState {
+  running: boolean
+  speed: number
+  failureRate: number
+  arrivalRate: number
 }

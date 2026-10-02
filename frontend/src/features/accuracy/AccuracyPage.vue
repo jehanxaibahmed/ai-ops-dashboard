@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted } from 'vue'
+import { computed, onBeforeUnmount, onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import type { AccuracyGroupBy } from '@/shared/api/types'
 import AppButton from '@/shared/components/AppButton.vue'
@@ -9,16 +9,17 @@ import PageHeader from '@/shared/components/PageHeader.vue'
 import StatCard from '@/shared/components/StatCard.vue'
 import ChartCard from '@/shared/components/charts/ChartCard.vue'
 import { seriesColor, useChartTheme } from '@/shared/components/charts/useChartTheme'
+import { useGlobalFilters } from '@/shared/filters/useGlobalFilters'
 import { useCatalogStore } from '@/shared/stores/catalog'
 import { formatDay } from '@/shared/utils/dates'
 import { formatNumber, formatPercent, formatPointsChange } from '@/shared/utils/format'
 import AccuracyRowsTable from './components/AccuracyRowsTable.vue'
 import AccuracyTrendChart from './components/AccuracyTrendChart.vue'
 import WorstFieldsList from './components/WorstFieldsList.vue'
-import { RANGE_OPTIONS, useAccuracyStore } from './useAccuracyStore'
+import { useAccuracyStore } from './useAccuracyStore'
 
 const store = useAccuracyStore()
-const { report, loading, error, rangeDays, groupBy } = storeToRefs(store)
+const { report, loading, error, groupBy } = storeToRefs(store)
 const catalog = useCatalogStore()
 const theme = useChartTheme()
 
@@ -37,10 +38,13 @@ const biggestDrop = computed(() => {
   return rows.reduce<(typeof rows)[number] | null>((worst, r) => (!worst || r.recentChange! < worst.recentChange! ? r : worst), null)
 })
 
+const filters = useGlobalFilters()
+watch(filters.key, () => store.setQuery(filters.query.value))
+
 let disconnect: (() => void) | undefined
 onMounted(() => {
   void catalog.ensureLoaded()
-  void store.load()
+  void store.setQuery(filters.query.value)
   disconnect = store.connect()
 })
 onBeforeUnmount(() => disconnect?.())
@@ -59,18 +63,6 @@ onBeforeUnmount(() => disconnect?.())
           @click="store.setGroupBy(g)"
         >
           By {{ g.toLowerCase() }}
-        </AppButton>
-      </div>
-      <div class="group" role="group" aria-label="Date range">
-        <AppButton
-          v-for="days in RANGE_OPTIONS"
-          :key="days"
-          size="sm"
-          :variant="rangeDays === days ? 'primary' : 'secondary'"
-          :aria-pressed="rangeDays === days"
-          @click="store.setRange(days)"
-        >
-          Last {{ days }} days
         </AppButton>
       </div>
     </template>

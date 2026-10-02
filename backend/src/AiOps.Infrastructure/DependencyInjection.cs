@@ -19,6 +19,7 @@ public static class DependencyInjection
 
         // Seeder must be registered before the simulator so history exists before live jobs start.
         services.AddHostedService<HistorySeeder>();
+        services.AddSingleton<ISimulationControl, SimulationControl>();
         services.AddSingleton<JobSimulationEngine>();
         services.AddHostedService<JobSimulatorService>();
 

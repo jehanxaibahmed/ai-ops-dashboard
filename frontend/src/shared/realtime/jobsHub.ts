@@ -1,6 +1,6 @@
 import { HubConnectionBuilder, HubConnectionState, LogLevel, type HubConnection } from '@microsoft/signalr'
 import { readonly, ref } from 'vue'
-import type { Job } from '@/shared/api/types'
+import type { Job, SimulationState } from '@/shared/api/types'
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'reconnecting'
 
@@ -9,6 +9,7 @@ type ReconnectListener = () => void
 
 const status = ref<ConnectionStatus>('disconnected')
 const jobListeners = new Set<JobListener>()
+const simulationListeners = new Set<(state: SimulationState) => void>()
 const reconnectListeners = new Set<ReconnectListener>()
 let connection: HubConnection | null = null
 let starting: Promise<void> | null = null
@@ -21,6 +22,7 @@ function build(): HubConnection {
     .build()
 
   conn.on('JobUpdated', (job: Job) => jobListeners.forEach((l) => l(job)))
+  conn.on('SimulationChanged', (state: SimulationState) => simulationListeners.forEach((l) => l(state)))
   conn.onreconnecting(() => (status.value = 'reconnecting'))
   conn.onreconnected(() => {
     status.value = 'connected'
@@ -64,6 +66,13 @@ export function onJobUpdated(listener: JobListener, onReconnected?: ReconnectLis
     jobListeners.delete(listener)
     if (onReconnected) reconnectListeners.delete(onReconnected)
   }
+}
+
+/** Subscribe to demo-mode changes made from any tab. */
+export function onSimulationChanged(listener: (state: SimulationState) => void): () => void {
+  simulationListeners.add(listener)
+  void start()
+  return () => simulationListeners.delete(listener)
 }
 
 export function useJobsHub() {

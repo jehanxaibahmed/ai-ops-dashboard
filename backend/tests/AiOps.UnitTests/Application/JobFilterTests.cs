@@ -23,4 +23,14 @@ public class JobFilterTests
         Assert.True(filter.Matches(Jobs.New(document: "INV-4211.pdf")));
         Assert.False(filter.Matches(Jobs.New(document: "receipt-1.jpg")));
     }
+
+    [Fact]
+    public void Failure_code_filter_only_matches_failed_jobs_with_that_code()
+    {
+        var filter = new JobFilter { FailureCodes = ["timeout"] };
+
+        Assert.True(filter.Matches(Jobs.Failed(transient: true)));       // timeout
+        Assert.False(filter.Matches(Jobs.Failed(transient: false)));     // invalid_document
+        Assert.False(filter.Matches(Jobs.Succeeded()));
+    }
 }
