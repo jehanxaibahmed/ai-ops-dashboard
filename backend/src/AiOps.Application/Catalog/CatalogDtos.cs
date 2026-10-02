@@ -1,6 +1,6 @@
 namespace AiOps.Application.Catalog;
 
-public sealed record PipelineDto(string Id, string Name, string Description, IReadOnlyList<string> Models);
+public sealed record PipelineDto(string Id, string Name, string Description, IReadOnlyList<string> Models, IReadOnlyList<string> Fields);
 
 public sealed record ModelDto(string Id, string DisplayName, string Provider, decimal InputPerMillion, decimal OutputPerMillion);
 

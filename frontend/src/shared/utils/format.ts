@@ -62,3 +62,11 @@ export function formatDateTime(iso: string): string {
 export function shortId(id: string): string {
   return id.slice(0, 8)
 }
+
+/** Signed change in percentage points, e.g. `-4.2 pts`. */
+export function formatPointsChange(value: number | null | undefined, digits = 1): string {
+  if (value === null || value === undefined) return '—'
+  const pts = value * 100
+  const sign = pts > 0 ? '+' : pts < 0 ? '−' : '±'
+  return `${sign}${Math.abs(pts).toFixed(digits)} pts`
+}

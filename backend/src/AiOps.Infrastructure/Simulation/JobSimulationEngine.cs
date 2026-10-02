@@ -13,11 +13,13 @@ namespace AiOps.Infrastructure.Simulation;
 public sealed class JobSimulationEngine
 {
     private readonly IJobRepository _jobs;
+    private readonly IEvaluationRepository _evaluations;
     private readonly IJobNotifier _notifier;
     private readonly TimeProvider _clock;
     private readonly SimulationOptions _options;
     private readonly Random _random;
     private readonly JobFactory _factory;
+    private readonly SampleEvaluator _evaluator;
 
     // Planned usage for jobs currently running. Lives here, not on the entity,
     // because it is a simulation detail rather than a fact about the job.
@@ -25,17 +27,20 @@ public sealed class JobSimulationEngine
 
     public JobSimulationEngine(
         IJobRepository jobs,
+        IEvaluationRepository evaluations,
         IJobNotifier notifier,
         ICatalog catalog,
         TimeProvider clock,
         IOptions<SimulationOptions> options)
     {
         _jobs = jobs;
+        _evaluations = evaluations;
         _notifier = notifier;
         _clock = clock;
         _options = options.Value;
         _random = _options.RandomSeed is { } seed ? new Random(seed) : new Random();
         _factory = new JobFactory(catalog, _random);
+        _evaluator = new SampleEvaluator(catalog, _random);
     }
 
     public async Task TickAsync(CancellationToken ct = default)
@@ -55,6 +60,8 @@ public sealed class JobSimulationEngine
         {
             Advance(job, now);
             await _jobs.UpdateAsync(job, ct);
+            if (job.Status == JobStatus.Succeeded && _evaluator.Evaluate(job, now, now) is { } evaluation)
+                await _evaluations.AddAsync(evaluation, ct);
             changed.Add(job);
         }
 

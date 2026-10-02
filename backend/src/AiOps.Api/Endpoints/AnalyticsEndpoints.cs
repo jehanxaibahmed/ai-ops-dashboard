@@ -12,6 +12,14 @@ public static class AnalyticsEndpoints
             Results.Ok(await costs.GetReportAsync(query.ToFilter(), ct)))
             .WithName("GetCostReport");
 
+        group.MapGet("/accuracy", async (
+            [AsParameters] JobQueryParameters query,
+            IAccuracyAnalyticsService accuracy,
+            CancellationToken ct,
+            AccuracyGroupBy groupBy = AccuracyGroupBy.Pipeline) =>
+            Results.Ok(await accuracy.GetReportAsync(query.ToFilter(), groupBy, ct)))
+            .WithName("GetAccuracyReport");
+
         return app;
     }
 }

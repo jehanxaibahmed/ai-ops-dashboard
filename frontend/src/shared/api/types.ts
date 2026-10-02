@@ -52,6 +52,7 @@ export interface Pipeline {
   name: string
   description: string
   models: string[]
+  fields: string[]
 }
 
 export interface Model {
@@ -136,4 +137,37 @@ export interface CostReport {
   byPipeline: CostBreakdownRow[]
   models: string[]
   daily: DailyCost[]
+}
+
+export type AccuracyGroupBy = 'Pipeline' | 'Model'
+
+export interface AccuracyRow {
+  key: string
+  accuracy: number
+  evaluations: number
+  /** Last 3 days minus the rest of the range, in accuracy points. */
+  recentChange: number | null
+}
+
+export interface DailyAccuracy {
+  date: string
+  accuracy: Record<string, number | null>
+  evaluations: Record<string, number>
+}
+
+export interface FieldErrorStat {
+  pipelineId: string
+  field: string
+  misses: number
+  checked: number
+  errorRate: number
+}
+
+export interface AccuracyReport {
+  groupBy: AccuracyGroupBy
+  overall: { accuracy: number | null; perfectRate: number | null; evaluations: number; fieldsChecked: number }
+  keys: string[]
+  rows: AccuracyRow[]
+  daily: DailyAccuracy[]
+  worstFields: FieldErrorStat[]
 }

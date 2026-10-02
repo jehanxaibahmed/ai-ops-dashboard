@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatCurrency, formatDuration, formatPercent, formatRelativeTime } from './format'
+import { formatCurrency, formatDuration, formatPercent, formatPointsChange, formatRelativeTime } from './format'
 
 describe('format', () => {
   it('keeps precision for sub-dollar amounts', () => {
@@ -25,5 +25,11 @@ describe('format', () => {
     expect(formatRelativeTime('2026-01-01T11:59:58Z', now)).toBe('just now')
     expect(formatRelativeTime('2026-01-01T11:58:00Z', now)).toBe('2m ago')
     expect(formatRelativeTime('2025-12-30T12:00:00Z', now)).toBe('2d ago')
+  })
+
+  it('formats signed point changes', () => {
+    expect(formatPointsChange(-0.042)).toBe('−4.2 pts')
+    expect(formatPointsChange(0.01)).toBe('+1.0 pts')
+    expect(formatPointsChange(null)).toBe('—')
   })
 })
