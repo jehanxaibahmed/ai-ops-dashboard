@@ -23,11 +23,13 @@ public sealed class HistorySeeder(
         var factory = new JobFactory(catalog, random);
         var now = clock.GetUtcNow();
         var start = now.AddDays(-opts.HistoryDays);
+        // Stop a few minutes short of now so every seeded job has finished before the live simulator starts.
+        var end = now.AddMinutes(-5);
         var total = opts.HistoryDays * opts.HistoryJobsPerDay;
 
         for (var i = 0; i < total; i++)
         {
-            var createdAt = start.AddSeconds(random.NextDouble() * (now - start).TotalSeconds * 0.98);
+            var createdAt = start.AddSeconds(random.NextDouble() * (end - start).TotalSeconds);
             var job = factory.Create(createdAt);
             var (input, output) = factory.PlanUsage(job);
             var startedAt = createdAt.AddSeconds(random.Next(1, 30));
