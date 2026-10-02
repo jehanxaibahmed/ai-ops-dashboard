@@ -51,7 +51,7 @@ The backend publishes job changes through `IJobNotifier`. The SignalR adapter pu
 | --- | --- | --- |
 | GET | `/api/health` | Liveness check |
 | GET | `/api/catalog` | Pipelines and models with pricing |
-| GET | `/api/jobs` | Paged job list. Filters: `status`, `pipeline`, `model` (repeatable), `from`, `to`, `search` |
+| GET | `/api/jobs` | Paged job list. Filters: `status`, `pipeline`, `model`, `failureCode` (repeatable), `from`, `to`, `search` |
 | GET | `/api/jobs/summary` | Counts by status, success rate, average duration, total cost |
 | GET | `/api/jobs/{id}` | One job |
 | POST | `/api/jobs/{id}/retry` | Retry one failed job. `409` if it is not failed or has no attempts left |
@@ -59,11 +59,15 @@ The backend publishes job changes through `IJobNotifier`. The SignalR adapter pu
 | GET | `/api/failures/breakdown` | Failures grouped by error code and failure rate per pipeline |
 | GET | `/api/analytics/costs` | Spend totals, by model, by pipeline and per UTC day by model |
 | GET | `/api/analytics/accuracy` | Field-weighted accuracy overall, per pipeline or model (`groupBy`), per day, and the most-missed fields |
-| WS | `/hubs/jobs` | SignalR. Server sends `JobUpdated(job)` on every change |
+| GET | `/api/simulation` | Demo-mode state: running, speed, failure rate |
+| PATCH | `/api/simulation` | Update any of `running`, `speed` (0.5/1/2/5), `failureRate` (0–0.9). `400` on invalid values |
+| WS | `/hubs/jobs` | SignalR. Server sends `JobUpdated(job)` on every job change and `SimulationChanged(state)` on demo-mode changes |
 
 ## Demo mode
 
 `JobSimulationEngine` is a timer-free state machine driven by `JobSimulatorService`. On startup `HistorySeeder` writes 14 days of finished jobs so charts have data. Both are configured under `Simulation` in `appsettings.json`.
+
+At runtime, `ISimulationControl` holds the live settings. Pausing skips ticks. Changing speed changes the tick period of the `PeriodicTimer`. The engine reads the failure rate on every tick. The sidebar controls call `PATCH /api/simulation`, and every open tab updates through `SimulationChanged`.
 
 ## Retries
 
@@ -83,3 +87,21 @@ Charts use Chart.js through `vue-chartjs`, wrapped in `shared/components/charts/
 Each succeeded job gets an `EvaluationResult`: the pipeline's fields that were checked and the ones the model got wrong. Accuracy is field-weighted (correct fields / checked fields).
 
 `SampleEvaluator` gives each field a chance of being right that depends on the model, the pipeline and the field. It also builds in a regression: Gemini Flash is 12 points worse over the last 4 days. That gives the demo a visible drop to investigate on the Accuracy page.
+
+## Filters
+
+Pages share one set of filters, kept in the URL so any view can be linked:
+
+```
+?range=24h|7d|14d   (default 7d, omitted from the URL)
+&pipeline=a&pipeline=b
+&model=m
+&q=search
+&status=Failed      (Jobs page only)
+```
+
+- `shared/filters/filters.ts` parses and serialises the query string and turns it into the API `JobQuery`.
+- `useGlobalFilters()` reads the filters from the route and exposes a stable `key` that pages watch to reload.
+- Each route lists the controls it supports in `meta.filters`, for example the Costs page has no search box.
+- `FilterBar` renders the controls in a single row above the page.
+- The router carries the filter keys over when you move between pages.

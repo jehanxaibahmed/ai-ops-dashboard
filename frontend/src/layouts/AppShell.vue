@@ -44,10 +44,14 @@ const navItems = computed(() =>
 <style scoped>
 .shell {
   display: grid;
-  grid-template-columns: 220px 1fr;
+  grid-template-columns: 220px minmax(0, 1fr);
   min-height: 100vh;
 }
 .sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
@@ -94,23 +98,29 @@ nav {
 }
 @media (max-width: 760px) {
   .shell {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .sidebar {
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
+    position: static;
+    height: auto;
+    gap: var(--space-3);
     border-right: none;
     border-bottom: 1px solid var(--color-border);
     padding: var(--space-3) var(--space-4);
   }
+  /* Nav scrolls sideways instead of pushing the page wider than the screen. */
   nav {
     flex-direction: row;
-    flex-wrap: wrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin: 0 calc(-1 * var(--space-4));
+    padding: 0 var(--space-4);
+  }
+  .nav-link {
+    white-space: nowrap;
   }
   .sidebar-footer {
     margin-top: 0;
-    margin-left: auto;
   }
   .content {
     padding: var(--space-4);
