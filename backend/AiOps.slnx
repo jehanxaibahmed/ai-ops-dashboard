@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AiOps.Api/AiOps.Api.csproj" />
+    <Project Path="src/AiOps.Application/AiOps.Application.csproj" />
+    <Project Path="src/AiOps.Domain/AiOps.Domain.csproj" />
+    <Project Path="src/AiOps.Infrastructure/AiOps.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AiOps.UnitTests/AiOps.UnitTests.csproj" />
+  </Folder>
+</Solution>
