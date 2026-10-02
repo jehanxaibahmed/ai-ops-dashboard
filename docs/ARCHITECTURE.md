@@ -34,7 +34,12 @@ Dependencies point inwards: `Api → Infrastructure → Application → Domain`.
 
 ## Frontend structure
 
-Each feature folder owns its API calls, Pinia store and components. Shared code lives in `shared/`. Features never import from each other, only from `shared/`.
+- `shared/api/` holds the typed endpoint clients and the DTO types that mirror the backend.
+- `shared/realtime/` owns the single SignalR connection. Stores subscribe with `onJobUpdated(listener, onReconnected)`.
+- `shared/components/`, `shared/utils/`, `shared/stores/` hold reusable UI, formatters and the catalog store.
+- Each `features/<name>/` folder owns its page, Pinia store and components.
+
+Features never import from each other, only from `shared/`. That keeps every feature removable on its own.
 
 ## Live updates
 
