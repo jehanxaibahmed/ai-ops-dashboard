@@ -4,7 +4,7 @@ import { getJob, listJobs } from '@/shared/api/jobs'
 import type { Job, JobQuery } from '@/shared/api/types'
 import { onJobUpdated } from '@/shared/realtime/jobsHub'
 import { matchesQuery } from '@/shared/utils/jobQuery'
-import { mergeJobUpdate } from './liveMerge'
+import { mergeJobUpdate } from '@/shared/utils/liveMerge'
 
 export const useJobsStore = defineStore('jobs', () => {
   const query = ref<JobQuery>({})

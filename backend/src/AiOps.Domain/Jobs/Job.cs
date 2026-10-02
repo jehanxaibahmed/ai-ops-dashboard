@@ -9,6 +9,14 @@ namespace AiOps.Domain.Jobs;
 /// </summary>
 public sealed class Job
 {
+    /// <summary>Total attempts allowed, including the first one.</summary>
+    public const int MaxAttempts = 5;
+
+    // Usage from earlier attempts. Retries still cost money, so totals keep growing.
+    private long _priorInputTokens;
+    private long _priorOutputTokens;
+    private decimal _priorCostUsd;
+
     public Guid Id { get; }
     public string PipelineId { get; }
     public string Model { get; }
@@ -46,6 +54,8 @@ public sealed class Job
 
     public bool IsTerminal => Status is JobStatus.Succeeded or JobStatus.Failed;
 
+    public bool CanRetry => Status == JobStatus.Failed && Attempt < MaxAttempts;
+
     public void Start(DateTimeOffset now)
     {
         EnsureStatus(JobStatus.Queued, "start");
@@ -56,6 +66,7 @@ public sealed class Job
         UpdatedAt = now;
     }
 
+    /// <summary>Records progress and usage for the current attempt. Usage values are for this attempt only.</summary>
     public void ReportProgress(int progress, long inputTokens, long outputTokens, decimal costUsd, DateTimeOffset now)
     {
         EnsureStatus(JobStatus.Running, "report progress on");
@@ -64,9 +75,9 @@ public sealed class Job
 
         // Progress never goes backwards and stays below 100 until the job completes.
         Progress = Math.Clamp(Math.Max(Progress, progress), 0, 99);
-        InputTokens = inputTokens;
-        OutputTokens = outputTokens;
-        CostUsd = costUsd;
+        InputTokens = _priorInputTokens + inputTokens;
+        OutputTokens = _priorOutputTokens + outputTokens;
+        CostUsd = _priorCostUsd + costUsd;
         UpdatedAt = now;
     }
 
@@ -87,6 +98,26 @@ public sealed class Job
         Status = JobStatus.Failed;
         Failure = failure;
         CompletedAt = now;
+        UpdatedAt = now;
+    }
+
+    /// <summary>Puts a failed job back in the queue as a new attempt.</summary>
+    public void Retry(DateTimeOffset now)
+    {
+        EnsureStatus(JobStatus.Failed, "retry");
+        if (Attempt >= MaxAttempts)
+            throw new DomainException($"Job has already used all {MaxAttempts} attempts.");
+
+        _priorInputTokens = InputTokens;
+        _priorOutputTokens = OutputTokens;
+        _priorCostUsd = CostUsd;
+
+        Attempt++;
+        Status = JobStatus.Queued;
+        Progress = 0;
+        Failure = null;
+        StartedAt = null;
+        CompletedAt = null;
         UpdatedAt = now;
     }
 

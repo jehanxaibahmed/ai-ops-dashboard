@@ -25,6 +25,16 @@ public static class JobEndpoints
             Results.Ok(await jobs.GetAsync(id, ct)))
             .WithName("GetJob");
 
+        group.MapPost("/{id:guid}/retry", async (Guid id, IJobService jobs, CancellationToken ct) =>
+            Results.Ok(await jobs.RetryAsync(id, ct)))
+            .WithName("RetryJob");
+
+        group.MapPost("/retry", async (RetryJobsRequest request, IJobService jobs, CancellationToken ct) =>
+            Results.Ok(await jobs.RetryManyAsync(request.JobIds ?? [], ct)))
+            .WithName("RetryJobs");
+
         return app;
     }
 }
+
+public sealed record RetryJobsRequest(Guid[]? JobIds);

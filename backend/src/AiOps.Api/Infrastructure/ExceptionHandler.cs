@@ -14,7 +14,7 @@ public sealed class ExceptionHandler(IProblemDetailsService problemDetails) : IE
         {
             NotFoundException => (StatusCodes.Status404NotFound, "Not found"),
             DomainException => (StatusCodes.Status409Conflict, "Request conflicts with job state"),
-            BadHttpRequestException => (StatusCodes.Status400BadRequest, "Bad request"),
+            BadHttpRequestException or ArgumentException => (StatusCodes.Status400BadRequest, "Bad request"),
             _ => (0, string.Empty),
         };
         if (status == 0) return false;

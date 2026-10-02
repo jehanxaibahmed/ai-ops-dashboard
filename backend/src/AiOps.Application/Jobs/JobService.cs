@@ -1,12 +1,14 @@
 using AiOps.Application.Abstractions;
 using AiOps.Application.Common;
+using AiOps.Domain.Common;
 using AiOps.Domain.Jobs;
 
 namespace AiOps.Application.Jobs;
 
-public sealed class JobService(IJobRepository jobs) : IJobService
+public sealed class JobService(IJobRepository jobs, IJobNotifier notifier, TimeProvider clock) : IJobService
 {
     public const int MaxPageSize = 200;
+    public const int MaxBulkRetry = 500;
 
     public async Task<PagedResult<JobDto>> ListAsync(JobFilter filter, int page, int pageSize, CancellationToken ct = default)
     {
@@ -48,5 +50,53 @@ public sealed class JobService(IJobRepository jobs) : IJobService
             SuccessRate: finished == 0 ? null : (double)succeeded / finished,
             AverageDurationSeconds: durations.Count == 0 ? null : durations.Average(),
             TotalCostUsd: matches.Sum(j => j.CostUsd));
+    }
+
+    public async Task<JobDto> RetryAsync(Guid id, CancellationToken ct = default)
+    {
+        var job = await jobs.GetAsync(id, ct) ?? throw new NotFoundException($"Job {id} was not found.");
+        job.Retry(clock.GetUtcNow());
+        await jobs.UpdateAsync(job, ct);
+
+        var dto = JobDto.From(job);
+        await notifier.JobChangedAsync(dto, ct);
+        return dto;
+    }
+
+    public async Task<RetryResultDto> RetryManyAsync(IReadOnlyCollection<Guid> ids, CancellationToken ct = default)
+    {
+        if (ids.Count > MaxBulkRetry)
+            throw new ArgumentException($"At most {MaxBulkRetry} jobs can be retried at once.", nameof(ids));
+
+        var retried = new List<JobDto>();
+        var skipped = new List<RetrySkip>();
+        var now = clock.GetUtcNow();
+
+        foreach (var id in ids.Distinct())
+        {
+            var job = await jobs.GetAsync(id, ct);
+            if (job is null)
+            {
+                skipped.Add(new RetrySkip(id, "Job not found."));
+                continue;
+            }
+
+            try
+            {
+                job.Retry(now);
+            }
+            catch (DomainException ex)
+            {
+                skipped.Add(new RetrySkip(id, ex.Message));
+                continue;
+            }
+
+            await jobs.UpdateAsync(job, ct);
+            var dto = JobDto.From(job);
+            retried.Add(dto);
+            await notifier.JobChangedAsync(dto, ct);
+        }
+
+        return new RetryResultDto(retried, skipped);
     }
 }

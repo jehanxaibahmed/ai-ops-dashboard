@@ -8,8 +8,9 @@ import EmptyState from '@/shared/components/EmptyState.vue'
 import PageHeader from '@/shared/components/PageHeader.vue'
 import PaginationBar from '@/shared/components/PaginationBar.vue'
 import { useNow } from '@/shared/composables/useNow'
+import { useRetry } from '@/shared/composables/useRetry'
 import { useCatalogStore } from '@/shared/stores/catalog'
-import JobDetailPanel from './components/JobDetailPanel.vue'
+import JobDetailPanel from '@/shared/components/jobs/JobDetailPanel.vue'
 import JobsTable from './components/JobsTable.vue'
 import StatusTabs from './components/StatusTabs.vue'
 import { useJobsStore } from './useJobsStore'
@@ -18,6 +19,7 @@ const store = useJobsStore()
 const { items, total, page, pageSize, loading, error, paused, missedWhilePaused, selected, selectedId } = storeToRefs(store)
 const catalog = useCatalogStore()
 const now = useNow()
+const { pending, retryOne } = useRetry((jobs) => jobs.forEach(store.applyUpdate))
 
 const status = computed<JobStatus | null>({
   get: () => store.query.status?.[0] ?? null,
@@ -56,7 +58,13 @@ onBeforeUnmount(() => disconnect?.())
     <PaginationBar :page="page" :page-size="pageSize" :total="total" @update:page="store.setPage" />
   </Card>
 
-  <JobDetailPanel v-if="selected" :job="selected" @close="store.select(null)" />
+  <JobDetailPanel v-if="selected" :job="selected" @close="store.select(null)">
+    <template v-if="selected.status === 'Failed'" #actions>
+      <AppButton variant="primary" :disabled="!selected.canRetry" :loading="pending.has(selected.id)" @click="retryOne(selected.id)">
+        Retry job
+      </AppButton>
+    </template>
+  </JobDetailPanel>
 </template>
 
 <style scoped>
