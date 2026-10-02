@@ -6,6 +6,7 @@
     <Project Path="src/AiOps.Infrastructure/AiOps.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/AiOps.Api.IntegrationTests/AiOps.Api.IntegrationTests.csproj" />
     <Project Path="tests/AiOps.UnitTests/AiOps.UnitTests.csproj" />
   </Folder>
 </Solution>
