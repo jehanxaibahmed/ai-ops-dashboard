@@ -1,3 +1,4 @@
+using AiOps.Application.Analytics;
 using AiOps.Application.Failures;
 using AiOps.Application.Jobs;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,6 +11,7 @@ public static class DependencyInjection
     {
         services.AddScoped<IJobService, JobService>();
         services.AddScoped<IFailureService, FailureService>();
+        services.AddScoped<ICostAnalyticsService, CostAnalyticsService>();
         return services;
     }
 }

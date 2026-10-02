@@ -51,6 +51,7 @@ app.MapHealthEndpoints();
 app.MapCatalogEndpoints();
 app.MapJobEndpoints();
 app.MapFailureEndpoints();
+app.MapAnalyticsEndpoints();
 app.MapHub<JobsHub>(JobsHub.Route);
 
 app.Run();
