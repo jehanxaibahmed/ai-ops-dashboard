@@ -1,23 +1,23 @@
 # Progress and handoff
 
-Last updated: 2026-10-02 (end of session 2)
+Last updated: 2026-10-02 (end of session 3)
 
-**Overall: about 85% done.**
+**Overall: 100% of the planned roadmap is done.** All 8 PRs are open and ready for review.
 
 ## How the work is organised
 
 The work is split into **stacked PRs**. Each branch is cut from the one before it, and each PR targets the previous branch. Review and merge them in order, 1 → 8. After you merge one, GitHub retargets the next PR to `main`; if it doesn't, change the base by hand.
 
-| # | Branch | PR | State |
+| # | Branch | PR | What |
 |---|---|---|---|
-| 1 | `chore/01-project-scaffold` | [#1](https://github.com/jehanxaibahmed/ai-ops-dashboard/pull/1) | ✅ Ready for review |
-| 2 | `feat/02-jobs-api` | [#2](https://github.com/jehanxaibahmed/ai-ops-dashboard/pull/2) | ✅ Ready for review |
-| 3 | `feat/03-live-job-list` | [#3](https://github.com/jehanxaibahmed/ai-ops-dashboard/pull/3) | ✅ Ready for review |
-| 4 | `feat/04-failures-retry` | [#4](https://github.com/jehanxaibahmed/ai-ops-dashboard/pull/4) | ✅ Ready for review |
-| 5 | `feat/05-cost-analytics` | [#5](https://github.com/jehanxaibahmed/ai-ops-dashboard/pull/5) | ✅ Ready for review |
-| 6 | `feat/06-accuracy-trends` | [#6](https://github.com/jehanxaibahmed/ai-ops-dashboard/pull/6) | ✅ Ready for review |
-| 7 | `feat/07-filters-demo-mode` | not opened yet | 🟡 Code written and committed as WIP. Builds, tests pass. Not yet checked in the browser |
-| 8 | `chore/08-docker-ci` | — | ⬜ Not started |
+| 1 | `chore/01-project-scaffold` | [#1](https://github.com/jehanxaibahmed/ai-ops-dashboard/pull/1) | Layered .NET 10 backend and Vue 3 frontend scaffold |
+| 2 | `feat/02-jobs-api` | [#2](https://github.com/jehanxaibahmed/ai-ops-dashboard/pull/2) | Job domain, REST API, SignalR hub, simulator |
+| 3 | `feat/03-live-job-list` | [#3](https://github.com/jehanxaibahmed/ai-ops-dashboard/pull/3) | Live job list and overview |
+| 4 | `feat/04-failures-retry` | [#4](https://github.com/jehanxaibahmed/ai-ops-dashboard/pull/4) | Failure view with retry actions |
+| 5 | `feat/05-cost-analytics` | [#5](https://github.com/jehanxaibahmed/ai-ops-dashboard/pull/5) | Cost per model and per day |
+| 6 | `feat/06-accuracy-trends` | [#6](https://github.com/jehanxaibahmed/ai-ops-dashboard/pull/6) | Accuracy trends from evaluation results |
+| 7 | `feat/07-filters-demo-mode` | [#7](https://github.com/jehanxaibahmed/ai-ops-dashboard/pull/7) | Global URL filters and demo-mode controls |
+| 8 | `chore/08-docker-ci` | [#8](https://github.com/jehanxaibahmed/ai-ops-dashboard/pull/8) | Docker Compose, GitHub Actions CI, final README |
 
 ## Done
 
@@ -45,7 +45,7 @@ The work is split into **stacked PRs**. Each branch is cut from the one before i
   - table that flags drops of 2 points or more
   - list of the most-missed fields
 
-### 7 · Filters and demo mode (WIP, committed but not reviewed)
+### 7 · Filters and demo mode
 - **Backend**
   - `failureCode` filter on all job endpoints. This fixes the old limitation where the error-code filter only covered the loaded page.
   - `ISimulationControl` with running, speed (0.5/1/2/5×) and failure rate.
@@ -62,46 +62,30 @@ The work is split into **stacked PRs**. Each branch is cut from the one before i
   - The sidebar has demo-mode controls (on/off switch, speed, failure rate) that stay in sync across tabs.
   - Frontend total: 22 tests passing, clean build.
 
-## Next session
+### 7 · Follow-up fixes (session 3)
+- The sidebar is sticky on desktop.
+- Mobile layout fixed: at 390 px the page no longer scrolls sideways.
+- The Jobs status tab is kept in the URL.
 
-### Finish PR 7
-1. Run the backend and frontend, then check each page in the browser:
-   - The filter bar shows the right controls on each page.
-   - Changing a filter updates the URL and reloads the data.
-   - Filters carry over when you navigate.
-   - Reset clears the filters.
-   - The multi-select closes when you click outside it or press Esc.
-2. Check demo mode:
-   - Pause stops new jobs.
-   - 5× speed is visibly faster.
-   - A 30% failure rate shows up on the Failures page.
-   - A second tab picks up changes.
-3. Check the sidebar layout at phone width, now that it holds the demo controls.
-4. Optional: keep the Jobs status tab in the URL too (`?status=`).
-5. Update `docs/ARCHITECTURE.md` with the filters, the `/api/simulation` endpoints and the `SimulationChanged` event.
-6. Commit, then open PR 7 against `feat/06-accuracy-trends`.
+### 8 · Docker, CI, README
+- `backend/Dockerfile`: multi-stage build with the .NET 10 SDK, then the aspnet runtime. Runs as a non-root user on port 8080.
+- `frontend/Dockerfile`: node build, then nginx. `nginx.conf` falls back to `index.html` for SPA routes, proxies `/api`, proxies `/hubs` with WebSocket upgrade, and caches the hashed assets.
+- `docker-compose.yml`: web on `:8080`, api on `:5080`.
+- `.github/workflows/ci.yml`: a backend job (build + tests), a frontend job (tests + build) and a Docker build job.
+- README rewritten with features, screenshots, quick start, architecture summary and the roadmap ticked off.
 
-### PR 8 · Docker, CI, README
-- `backend/Dockerfile`: multi-stage build with the .NET 10 SDK, then the aspnet runtime. Listen on `8080`.
-- `frontend/Dockerfile`: build with node, then serve with nginx. `nginx.conf` should:
-  - fall back to `index.html` for SPA routes
-  - proxy `/api` to the backend
-  - proxy `/hubs` with the WebSocket upgrade headers
-- `docker-compose.yml` with the backend and frontend services. Set CORS through environment variables.
-- `.github/workflows/ci.yml` with two jobs:
-  - backend: `dotnet test`
-  - frontend: `npm ci`, `npm test`, `npm run build`
-- Final README:
-  - screenshots of each page
-  - tick off every roadmap item
-  - change the status badge
-  - add a features section and a Docker quick start
-- Open PR 8 against `feat/07-filters-demo-mode`.
+### Tests
+- Backend: 48 unit + 14 integration tests.
+- Frontend: 22 tests, clean type-checked build.
+- Docker: ran the compose stack, then checked the health endpoint, an SPA deep link, and SignalR over WebSocket through nginx (18 events in 4 s).
 
-### Nice to have, if time allows
+## If you continue later (optional)
+- Database-backed store, such as Postgres with EF Core. It would replace the in-memory repositories behind the existing ports.
+- An ingestion API for real evaluation results.
+- Authentication, and per-team views.
+- Alerts when accuracy drops or the failure rate spikes.
 - Code-split Chart.js so the Jobs and Overview pages don't load it.
-- Retry a whole error code from the breakdown ("Retry all `rate_limited`").
-- End-to-end smoke test with Playwright.
+- End-to-end smoke tests with Playwright.
 
 ## Known limitations
 - The simulator changes job objects in memory while the API may be reading them. That is acceptable for an in-memory demo; a database adapter would remove it.
@@ -110,6 +94,8 @@ The work is split into **stacked PRs**. Each branch is cut from the one before i
 
 ## Running locally
 ```bash
+docker compose up --build                                 # http://localhost:8080
+# or
 cd backend && dotnet run --project src/AiOps.Api          # http://localhost:5080
 cd frontend && npm install && npm run dev                 # http://localhost:5173
 ```

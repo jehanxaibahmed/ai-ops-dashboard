@@ -113,7 +113,7 @@ onBeforeUnmount(() => disconnect?.())
           <AccuracyRowsTable :rows="report.rows" :key-label="groupBy" :label="label" :color="color" />
         </div>
       </Card>
-      <Card title="Most-missed fields" subtitle="Error rate per field, all models">
+      <Card title="Most-missed fields" subtitle="Error rate per field, for the current filters">
         <WorstFieldsList :fields="report.worstFields" />
       </Card>
     </div>
