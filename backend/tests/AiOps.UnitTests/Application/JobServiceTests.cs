@@ -3,15 +3,17 @@ using AiOps.Application.Jobs;
 using AiOps.Domain.Jobs;
 using AiOps.Infrastructure.Persistence;
 using AiOps.UnitTests.TestDoubles;
+using Microsoft.Extensions.Time.Testing;
 
 namespace AiOps.UnitTests.Application;
 
 public class JobServiceTests
 {
     private readonly InMemoryJobRepository _repo = new();
+    private readonly RecordingNotifier _notifier = new();
     private readonly JobService _service;
 
-    public JobServiceTests() => _service = new JobService(_repo);
+    public JobServiceTests() => _service = new JobService(_repo, _notifier, new FakeTimeProvider(Jobs.T0.AddHours(1)));
 
     [Fact]
     public async Task List_returns_newest_first_and_pages()
@@ -80,5 +82,42 @@ public class JobServiceTests
     public async Task Get_unknown_job_throws_not_found()
     {
         await Assert.ThrowsAsync<NotFoundException>(() => _service.GetAsync(Guid.NewGuid()));
+    }
+
+    [Fact]
+    public async Task Retry_requeues_the_job_and_notifies()
+    {
+        var job = Jobs.Failed();
+        await _repo.AddAsync(job);
+
+        var dto = await _service.RetryAsync(job.Id);
+
+        Assert.Equal(JobStatus.Queued, dto.Status);
+        Assert.Equal(2, dto.Attempt);
+        Assert.Contains(_notifier.Sent, j => j.Id == job.Id && j.Status == JobStatus.Queued);
+    }
+
+    [Fact]
+    public async Task RetryMany_reports_jobs_it_could_not_retry()
+    {
+        var failed = Jobs.Failed();
+        var succeeded = Jobs.Succeeded();
+        await _repo.AddAsync(failed);
+        await _repo.AddAsync(succeeded);
+        var missing = Guid.NewGuid();
+
+        var result = await _service.RetryManyAsync([failed.Id, succeeded.Id, missing]);
+
+        Assert.Equal(failed.Id, Assert.Single(result.Retried).Id);
+        Assert.Equal(2, result.Skipped.Count);
+        Assert.Contains(result.Skipped, s => s.JobId == missing);
+    }
+
+    [Fact]
+    public async Task RetryMany_rejects_oversized_requests()
+    {
+        var ids = Enumerable.Range(0, JobService.MaxBulkRetry + 1).Select(_ => Guid.NewGuid()).ToList();
+
+        await Assert.ThrowsAsync<ArgumentException>(() => _service.RetryManyAsync(ids));
     }
 }

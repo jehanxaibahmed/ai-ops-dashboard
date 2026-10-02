@@ -50,6 +50,7 @@ app.UseCors(FrontendCorsPolicy);
 app.MapHealthEndpoints();
 app.MapCatalogEndpoints();
 app.MapJobEndpoints();
+app.MapFailureEndpoints();
 app.MapHub<JobsHub>(JobsHub.Route);
 
 app.Run();

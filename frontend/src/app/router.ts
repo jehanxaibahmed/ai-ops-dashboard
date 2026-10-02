@@ -13,6 +13,12 @@ export const routes: RouteRecordRaw[] = [
     component: () => import('@/features/jobs/JobsPage.vue'),
     meta: { title: 'Jobs' },
   },
+  {
+    path: '/failures',
+    name: 'failures',
+    component: () => import('@/features/failures/FailuresPage.vue'),
+    meta: { title: 'Failures' },
+  },
 ]
 
 export const router = createRouter({

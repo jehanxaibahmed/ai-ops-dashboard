@@ -54,8 +54,15 @@ The backend publishes job changes through `IJobNotifier`. The SignalR adapter pu
 | GET | `/api/jobs` | Paged job list. Filters: `status`, `pipeline`, `model` (repeatable), `from`, `to`, `search` |
 | GET | `/api/jobs/summary` | Counts by status, success rate, average duration, total cost |
 | GET | `/api/jobs/{id}` | One job |
+| POST | `/api/jobs/{id}/retry` | Retry one failed job. `409` if it is not failed or has no attempts left |
+| POST | `/api/jobs/retry` | Bulk retry `{ jobIds: [] }`. Returns `retried` and `skipped` with reasons |
+| GET | `/api/failures/breakdown` | Failures grouped by error code and failure rate per pipeline |
 | WS | `/hubs/jobs` | SignalR. Server sends `JobUpdated(job)` on every change |
 
 ## Demo mode
 
 `JobSimulationEngine` is a timer-free state machine driven by `JobSimulatorService`. On startup `HistorySeeder` writes 14 days of finished jobs so charts have data. Both are configured under `Simulation` in `appsettings.json`.
+
+## Retries
+
+`Job.Retry` is only allowed from `Failed` and at most `Job.MaxAttempts` (5) times in total. A retry puts the job back to `Queued` as a new attempt. Token usage and cost add up across attempts, because failed attempts still cost money.

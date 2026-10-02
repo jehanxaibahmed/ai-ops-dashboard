@@ -26,6 +26,7 @@ export interface Job {
   outputTokens: number
   costUsd: number
   failure: JobFailure | null
+  canRetry: boolean
 }
 
 export interface PagedResult<T> {
@@ -74,4 +75,31 @@ export interface JobQuery {
   from?: string
   to?: string
   search?: string
+}
+
+export interface RetryResult {
+  retried: Job[]
+  skipped: { jobId: string; reason: string }[]
+}
+
+export interface FailureCodeStat {
+  code: string
+  sampleMessage: string
+  isTransient: boolean
+  count: number
+  lastSeenAt: string
+}
+
+export interface FailurePipelineStat {
+  pipelineId: string
+  failed: number
+  finished: number
+  failureRate: number
+}
+
+export interface FailureBreakdown {
+  totalFailed: number
+  retryable: number
+  byCode: FailureCodeStat[]
+  byPipeline: FailurePipelineStat[]
 }

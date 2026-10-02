@@ -20,6 +20,7 @@ function job(id: string, patch: Partial<Job> = {}): Job {
     outputTokens: 0,
     costUsd: 0,
     failure: null,
+    canRetry: false,
     ...patch,
   }
 }
