@@ -11,7 +11,8 @@ ai-ops-dashboard/
 │   │   ├── AiOps.Infrastructure/ Adapters: in-memory store, job simulator, clock.
 │   │   └── AiOps.Api/           HTTP endpoints, SignalR hub, composition root.
 │   └── tests/
-│       └── AiOps.UnitTests/
+│       ├── AiOps.UnitTests/         Domain, application and simulator tests
+│       └── AiOps.Api.IntegrationTests/ HTTP tests via WebApplicationFactory
 ├── frontend/                    Vue 3 + TypeScript + Vite
 │   └── src/
 │       ├── app/                 App root and router
@@ -38,3 +39,18 @@ Each feature folder owns its API calls, Pinia store and components. Shared code 
 ## Live updates
 
 The backend publishes job changes through `IJobNotifier`. The SignalR adapter pushes them to connected clients, and the frontend store merges each update into its local state.
+
+## API surface
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| GET | `/api/health` | Liveness check |
+| GET | `/api/catalog` | Pipelines and models with pricing |
+| GET | `/api/jobs` | Paged job list. Filters: `status`, `pipeline`, `model` (repeatable), `from`, `to`, `search` |
+| GET | `/api/jobs/summary` | Counts by status, success rate, average duration, total cost |
+| GET | `/api/jobs/{id}` | One job |
+| WS | `/hubs/jobs` | SignalR. Server sends `JobUpdated(job)` on every change |
+
+## Demo mode
+
+`JobSimulationEngine` is a timer-free state machine driven by `JobSimulatorService`. On startup `HistorySeeder` writes 14 days of finished jobs so charts have data. Both are configured under `Simulation` in `appsettings.json`.
