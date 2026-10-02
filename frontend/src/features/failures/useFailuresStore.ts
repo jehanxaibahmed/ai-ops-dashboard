@@ -21,13 +21,13 @@ export const useFailuresStore = defineStore('failures', () => {
   const error = ref<string | null>(null)
   const selection = ref(new Set<string>())
 
-  const query = computed<JobQuery>(() => ({ ...baseQuery.value, status: ['Failed'] }))
+  const query = computed<JobQuery>(() => ({
+    ...baseQuery.value,
+    status: ['Failed'],
+    failureCode: codeFilter.value ? [codeFilter.value] : undefined,
+  }))
 
-  // The API filters by status, not error code, so the code filter is applied client-side
-  // on the loaded page. Fine for a demo-sized dataset.
-  const visible = computed(() =>
-    codeFilter.value ? items.value.filter((j) => j.failure?.code === codeFilter.value) : items.value,
-  )
+  const visible = computed(() => items.value)
   const selectedRetryable = computed(() => visible.value.filter((j) => selection.value.has(j.id) && j.canRetry))
   const transientRetryable = computed(() => visible.value.filter((j) => j.status === 'Failed' && j.canRetry && j.failure?.isTransient))
 
@@ -92,6 +92,8 @@ export const useFailuresStore = defineStore('failures', () => {
   function setCode(code: string | null) {
     codeFilter.value = codeFilter.value === code ? null : code
     clearSelection()
+    page.value = 1
+    return load()
   }
 
   function setPage(next: number) {

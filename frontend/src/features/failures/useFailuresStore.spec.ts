@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { makeJob } from '@/test/factories'
 import { useFailuresStore } from './useFailuresStore'
@@ -17,15 +17,17 @@ describe('useFailuresStore', () => {
     expect(store.transientRetryable.map((j) => j.id)).toEqual(['a'])
   })
 
-  it('filters by error code and clears selection when the filter changes', () => {
+  it('sends the error code to the API and clears selection when it changes', () => {
+    const fetchMock = vi.fn((_input: string) => new Promise<Response>(() => {}))
+    vi.stubGlobal('fetch', fetchMock)
     const store = useFailuresStore()
-    store.items = [makeJob('a'), makeJob('b', { failure: { code: 'rate_limited', message: 'x', isTransient: true } })]
     store.toggle('a')
 
-    store.setCode('rate_limited')
+    void store.setCode('rate_limited')
 
-    expect(store.visible.map((j) => j.id)).toEqual(['b'])
     expect(store.selection.size).toBe(0)
+    expect(String(fetchMock.mock.calls[0]?.[0])).toContain('failureCode=rate_limited')
+    vi.unstubAllGlobals()
   })
 
   it('toggleAll selects all, then clears when everything is selected', () => {

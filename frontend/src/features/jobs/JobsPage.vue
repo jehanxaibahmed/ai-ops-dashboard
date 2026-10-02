@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted } from 'vue'
+import { computed, onBeforeUnmount, onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import type { JobStatus } from '@/shared/api/types'
+import { useRoute, useRouter } from 'vue-router'
+import { JOB_STATUSES, type JobStatus } from '@/shared/api/types'
 import AppButton from '@/shared/components/AppButton.vue'
 import Card from '@/shared/components/Card.vue'
 import EmptyState from '@/shared/components/EmptyState.vue'
@@ -9,6 +10,7 @@ import PageHeader from '@/shared/components/PageHeader.vue'
 import PaginationBar from '@/shared/components/PaginationBar.vue'
 import { useNow } from '@/shared/composables/useNow'
 import { useRetry } from '@/shared/composables/useRetry'
+import { useGlobalFilters } from '@/shared/filters/useGlobalFilters'
 import { useCatalogStore } from '@/shared/stores/catalog'
 import JobDetailPanel from '@/shared/components/jobs/JobDetailPanel.vue'
 import JobsTable from './components/JobsTable.vue'
@@ -21,15 +23,29 @@ const catalog = useCatalogStore()
 const now = useNow()
 const { pending, retryOne } = useRetry((jobs) => jobs.forEach(store.applyUpdate))
 
+const route = useRoute()
+const router = useRouter()
+
+// The status tab lives in the URL next to the global filters, so a filtered view can be shared.
 const status = computed<JobStatus | null>({
-  get: () => store.query.status?.[0] ?? null,
-  set: (value) => void store.setQuery({ ...store.query, status: value ? [value] : undefined }),
+  get: () => {
+    const value = route.query.status
+    return typeof value === 'string' && (JOB_STATUSES as readonly string[]).includes(value) ? (value as JobStatus) : null
+  },
+  set: (value) => {
+    const { status: _status, ...rest } = route.query
+    void router.replace({ query: value ? { ...rest, status: value } : rest })
+  },
 })
+
+const filters = useGlobalFilters()
+const applyFilters = () => store.setQuery({ ...filters.query.value, status: status.value ? [status.value] : undefined })
+watch([filters.key, status], applyFilters)
 
 let disconnect: (() => void) | undefined
 onMounted(() => {
   void catalog.ensureLoaded()
-  void store.load()
+  void applyFilters()
   disconnect = store.connect()
 })
 onBeforeUnmount(() => disconnect?.())

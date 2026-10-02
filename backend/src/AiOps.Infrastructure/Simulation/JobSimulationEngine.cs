@@ -17,6 +17,7 @@ public sealed class JobSimulationEngine
     private readonly IJobNotifier _notifier;
     private readonly TimeProvider _clock;
     private readonly SimulationOptions _options;
+    private readonly ISimulationControl _control;
     private readonly Random _random;
     private readonly JobFactory _factory;
     private readonly SampleEvaluator _evaluator;
@@ -31,8 +32,10 @@ public sealed class JobSimulationEngine
         IJobNotifier notifier,
         ICatalog catalog,
         TimeProvider clock,
-        IOptions<SimulationOptions> options)
+        IOptions<SimulationOptions> options,
+        ISimulationControl control)
     {
+        _control = control;
         _jobs = jobs;
         _evaluations = evaluations;
         _notifier = notifier;
@@ -46,9 +49,10 @@ public sealed class JobSimulationEngine
     public async Task TickAsync(CancellationToken ct = default)
     {
         var now = _clock.GetUtcNow();
+        var state = _control.State;
         var changed = new List<Job>();
 
-        if (_random.NextDouble() < _options.ArrivalRate)
+        if (_random.NextDouble() < state.ArrivalRate)
         {
             var job = _factory.Create(now);
             await _jobs.AddAsync(job, ct);
@@ -58,7 +62,7 @@ public sealed class JobSimulationEngine
         var running = await _jobs.QueryAsync(new JobFilter { Statuses = [JobStatus.Running] }, ct);
         foreach (var job in running)
         {
-            Advance(job, now);
+            Advance(job, now, state.FailureRate);
             await _jobs.UpdateAsync(job, ct);
             if (job.Status == JobStatus.Succeeded && _evaluator.Evaluate(job, now, now) is { } evaluation)
                 await _evaluations.AddAsync(evaluation, ct);
@@ -82,7 +86,7 @@ public sealed class JobSimulationEngine
             await _notifier.JobChangedAsync(JobDto.From(job), ct);
     }
 
-    private void Advance(Job job, DateTimeOffset now)
+    private void Advance(Job job, DateTimeOffset now, double failureRate)
     {
         if (!_plans.TryGetValue(job.Id, out var plan))
         {
@@ -104,7 +108,7 @@ public sealed class JobSimulationEngine
         job.ReportProgress(99, plan.Input, plan.Output, _factory.Cost(job, plan.Input, plan.Output), now);
         _plans.Remove(job.Id);
 
-        if (_random.NextDouble() < _options.FailureRate)
+        if (_random.NextDouble() < failureRate)
             job.Fail(SampleFailures.Pick(_random), now);
         else
             job.Succeed(now);

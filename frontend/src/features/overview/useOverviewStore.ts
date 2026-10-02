@@ -1,20 +1,23 @@
 import { defineStore } from 'pinia'
 import { computed, ref, shallowRef } from 'vue'
 import { getJobSummary, listJobs } from '@/shared/api/jobs'
-import type { Job, JobSummary } from '@/shared/api/types'
+import type { Job, JobQuery, JobSummary } from '@/shared/api/types'
 import { onJobUpdated } from '@/shared/realtime/jobsHub'
+import { matchesQuery } from '@/shared/utils/jobQuery'
 import { throttle } from '@/shared/utils/throttle'
-
-const DAY_MS = 24 * 60 * 60 * 1000
 
 export const useOverviewStore = defineStore('overview', () => {
   const summary = ref<JobSummary | null>(null)
   const active = shallowRef<Job[]>([])
   const error = ref<string | null>(null)
+  const query = ref<JobQuery>({})
+
+  /** Active jobs ignore the date range: anything running now is relevant. */
+  const activeQuery = (): JobQuery => ({ pipeline: query.value.pipeline, model: query.value.model, status: ['Running', 'Queued'] })
 
   async function loadSummary() {
     try {
-      summary.value = await getJobSummary({ from: new Date(Date.now() - DAY_MS).toISOString() })
+      summary.value = await getJobSummary(query.value)
       error.value = null
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to load summary'
@@ -22,7 +25,7 @@ export const useOverviewStore = defineStore('overview', () => {
   }
 
   async function loadActive() {
-    const result = await listJobs({ status: ['Running', 'Queued'] }, 1, 50)
+    const result = await listJobs(activeQuery(), 1, 50)
     active.value = result.items
   }
 
@@ -34,13 +37,17 @@ export const useOverviewStore = defineStore('overview', () => {
 
   function applyUpdate(job: Job) {
     const rest = active.value.filter((j) => j.id !== job.id)
-    active.value = job.status === 'Running' || job.status === 'Queued' ? [job, ...rest] : rest
+    active.value = matchesQuery(job, activeQuery()) ? [job, ...rest] : rest
     refreshSummary()
   }
 
-  function connect() {
+  function setQuery(next: JobQuery) {
+    query.value = next
     void loadSummary()
     void loadActive()
+  }
+
+  function connect() {
     const off = onJobUpdated(applyUpdate, () => {
       void loadSummary()
       void loadActive()
@@ -51,5 +58,5 @@ export const useOverviewStore = defineStore('overview', () => {
     }
   }
 
-  return { summary, running, queued, error, connect }
+  return { summary, running, queued, error, setQuery, connect }
 })

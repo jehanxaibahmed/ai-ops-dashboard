@@ -14,8 +14,8 @@ public sealed class FailureService(IJobRepository jobs) : IFailureService
 {
     public async Task<FailureBreakdownDto> GetBreakdownAsync(JobFilter filter, CancellationToken ct = default)
     {
-        // Status is decided here, so ignore any status the caller passed.
-        var finished = await jobs.QueryAsync(filter with { Statuses = [JobStatus.Succeeded, JobStatus.Failed] }, ct);
+        // Status and error code are what this breakdown is about, so ignore them in the incoming filter.
+        var finished = await jobs.QueryAsync(filter with { Statuses = [JobStatus.Succeeded, JobStatus.Failed], FailureCodes = [] }, ct);
         var failed = finished.Where(j => j.Status == JobStatus.Failed && j.Failure is not null).ToList();
 
         var byCode = failed

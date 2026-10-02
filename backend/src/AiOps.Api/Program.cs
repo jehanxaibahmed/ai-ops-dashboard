@@ -23,6 +23,7 @@ builder.Services
     .AddSignalR()
     .AddJsonProtocol(o => o.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddSingleton<IJobNotifier, SignalRJobNotifier>();
+builder.Services.AddSingleton<ISimulationNotifier, SignalRSimulationNotifier>();
 
 builder.Services.AddCors(options =>
 {
@@ -52,6 +53,7 @@ app.MapCatalogEndpoints();
 app.MapJobEndpoints();
 app.MapFailureEndpoints();
 app.MapAnalyticsEndpoints();
+app.MapSimulationEndpoints();
 app.MapHub<JobsHub>(JobsHub.Route);
 
 app.Run();

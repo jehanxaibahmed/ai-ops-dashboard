@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { getJob } from '@/shared/api/jobs'
 import type { Job } from '@/shared/api/types'
@@ -12,6 +12,7 @@ import StatCard from '@/shared/components/StatCard.vue'
 import JobDetailPanel from '@/shared/components/jobs/JobDetailPanel.vue'
 import { useNow } from '@/shared/composables/useNow'
 import { useRetry } from '@/shared/composables/useRetry'
+import { useGlobalFilters } from '@/shared/filters/useGlobalFilters'
 import { useCatalogStore } from '@/shared/stores/catalog'
 import { formatNumber } from '@/shared/utils/format'
 import FailedJobsTable from './components/FailedJobsTable.vue'
@@ -38,10 +39,13 @@ async function open(id: string) {
   openFallback.value = store.items.some((j) => j.id === id) ? null : await getJob(id)
 }
 
+const filters = useGlobalFilters()
+watch(filters.key, () => store.setBaseQuery(filters.query.value))
+
 let disconnect: (() => void) | undefined
 onMounted(() => {
   void catalog.ensureLoaded()
-  void store.load()
+  void store.setBaseQuery(filters.query.value)
   disconnect = store.connect()
 })
 onBeforeUnmount(() => disconnect?.())
@@ -93,7 +97,7 @@ onBeforeUnmount(() => disconnect?.())
     </Card>
   </div>
 
-  <Card title="Failed jobs" :subtitle="codeFilter ? `Filtered to ${codeFilter} on this page` : 'Newest first'" class="list">
+  <Card title="Failed jobs" :subtitle="codeFilter ? `Only ${codeFilter}` : 'Newest first'" class="list">
     <template v-if="codeFilter" #actions>
       <AppButton size="sm" variant="ghost" @click="store.setCode(null)">Clear filter</AppButton>
     </template>

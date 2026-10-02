@@ -1,3 +1,4 @@
+using AiOps.Application.Abstractions;
 using AiOps.Application.Jobs;
 using Microsoft.AspNetCore.SignalR;
 
@@ -7,6 +8,7 @@ namespace AiOps.Api.Realtime;
 public interface IJobsClient
 {
     Task JobUpdated(JobDto job);
+    Task SimulationChanged(SimulationState state);
 }
 
 /// <summary>Server-to-client only; clients use REST for commands.</summary>

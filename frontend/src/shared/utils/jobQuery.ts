@@ -5,6 +5,7 @@ export function matchesQuery(job: Job, query: JobQuery): boolean {
   if (query.status?.length && !query.status.includes(job.status)) return false
   if (query.pipeline?.length && !query.pipeline.includes(job.pipelineId)) return false
   if (query.model?.length && !query.model.includes(job.model)) return false
+  if (query.failureCode?.length && !(job.failure && query.failureCode.includes(job.failure.code))) return false
   const created = Date.parse(job.createdAt)
   if (query.from && created < Date.parse(query.from)) return false
   if (query.to && created >= Date.parse(query.to)) return false

@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted } from 'vue'
+import { computed, onBeforeUnmount, onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import Card from '@/shared/components/Card.vue'
 import PageHeader from '@/shared/components/PageHeader.vue'
 import StatCard from '@/shared/components/StatCard.vue'
+import { RANGE_LABELS } from '@/shared/filters/filters'
+import { useGlobalFilters } from '@/shared/filters/useGlobalFilters'
 import { useCatalogStore } from '@/shared/stores/catalog'
 import { formatCurrency, formatDuration, formatNumber, formatPercent } from '@/shared/utils/format'
 import ActiveJobsList from './components/ActiveJobsList.vue'
@@ -13,26 +15,34 @@ const store = useOverviewStore()
 const { summary, running, queued, error } = storeToRefs(store)
 const catalog = useCatalogStore()
 
+const filters = useGlobalFilters()
+const subtitle = computed(() => {
+  const scope = filters.filters.value.pipelines.length || filters.filters.value.models.length ? 'selected pipelines and models' : 'all pipelines'
+  return `${RANGE_LABELS[filters.filters.value.range]} across ${scope}`
+})
+watch(filters.key, () => store.setQuery(filters.query.value))
+
 let disconnect: (() => void) | undefined
 onMounted(() => {
   void catalog.ensureLoaded()
+  store.setQuery(filters.query.value)
   disconnect = store.connect()
 })
 onBeforeUnmount(() => disconnect?.())
 </script>
 
 <template>
-  <PageHeader title="Overview" subtitle="Last 24 hours across all pipelines" />
+  <PageHeader title="Overview" :subtitle="subtitle" />
 
   <p v-if="error" class="error" role="alert">{{ error }}</p>
 
   <div class="stats">
-    <StatCard label="Jobs (24h)" :value="summary ? formatNumber(summary.total) : '—'" />
+    <StatCard label="Jobs" :value="summary ? formatNumber(summary.total) : '—'" />
     <StatCard label="Running" tone="info" :value="summary ? formatNumber(summary.running) : '—'" :hint="summary ? `${summary.queued} queued` : undefined" />
     <StatCard label="Success rate" tone="success" :value="formatPercent(summary?.successRate)" />
     <StatCard label="Failed" tone="danger" :value="summary ? formatNumber(summary.failed) : '—'" />
     <StatCard label="Avg duration" :value="formatDuration(summary?.averageDurationSeconds)" />
-    <StatCard label="Cost (24h)" :value="summary ? formatCurrency(summary.totalCostUsd) : '—'" />
+    <StatCard label="Cost" :value="summary ? formatCurrency(summary.totalCostUsd) : '—'" />
   </div>
 
   <div class="grid">
