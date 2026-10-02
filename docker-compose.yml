@@ -1,0 +1,19 @@
+services:
+  api:
+    build: ./backend
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      # Demo mode settings; see backend/src/AiOps.Api/appsettings.json for all options.
+      Simulation__Enabled: "true"
+      Simulation__SeedHistory: "true"
+    ports:
+      - "5080:8080"
+    restart: unless-stopped
+
+  web:
+    build: ./frontend
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
+    restart: unless-stopped
