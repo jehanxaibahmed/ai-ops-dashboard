@@ -13,6 +13,11 @@ export function formatCurrency(value: number): string {
   return Math.abs(value) > 0 && Math.abs(value) < 1 ? usdPrecise.format(value) : usd.format(value)
 }
 
+/** Axis ticks: clean round numbers, never the 4-decimal precision used for single values. */
+export function formatCurrencyTick(value: number): string {
+  return usd.format(value)
+}
+
 export function formatNumber(value: number): string {
   return integer.format(value)
 }

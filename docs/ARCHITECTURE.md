@@ -57,6 +57,7 @@ The backend publishes job changes through `IJobNotifier`. The SignalR adapter pu
 | POST | `/api/jobs/{id}/retry` | Retry one failed job. `409` if it is not failed or has no attempts left |
 | POST | `/api/jobs/retry` | Bulk retry `{ jobIds: [] }`. Returns `retried` and `skipped` with reasons |
 | GET | `/api/failures/breakdown` | Failures grouped by error code and failure rate per pipeline |
+| GET | `/api/analytics/costs` | Spend totals, by model, by pipeline and per UTC day by model |
 | WS | `/hubs/jobs` | SignalR. Server sends `JobUpdated(job)` on every change |
 
 ## Demo mode
@@ -66,3 +67,12 @@ The backend publishes job changes through `IJobNotifier`. The SignalR adapter pu
 ## Retries
 
 `Job.Retry` is only allowed from `Failed` and at most `Job.MaxAttempts` (5) times in total. A retry puts the job back to `Queued` as a new attempt. Token usage and cost add up across attempts, because failed attempts still cost money.
+
+## Charts
+
+Charts use Chart.js through `vue-chartjs`, wrapped in `shared/components/charts/`.
+
+- Series colours are CSS tokens (`--series-1..4`) with separate light and dark steps. Both sets pass the colour-blind separation checks.
+- A model's colour comes from its position in the catalog, not its rank, so filtering never repaints the remaining series.
+- Every chart sits in a `ChartCard` with a **Table** view. The table is the accessible fallback, and it is needed because two light-mode colours are below 3:1 contrast.
+- `useChartTheme` re-reads the tokens when the OS colour scheme changes.

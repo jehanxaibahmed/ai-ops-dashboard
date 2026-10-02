@@ -103,3 +103,37 @@ export interface FailureBreakdown {
   byCode: FailureCodeStat[]
   byPipeline: FailurePipelineStat[]
 }
+
+export interface CostTotals {
+  totalCostUsd: number
+  jobs: number
+  inputTokens: number
+  outputTokens: number
+  averageCostPerJobUsd: number | null
+  failedCostUsd: number
+}
+
+export interface CostBreakdownRow {
+  key: string
+  jobs: number
+  inputTokens: number
+  outputTokens: number
+  costUsd: number
+  averageCostPerJobUsd: number | null
+  share: number
+}
+
+export interface DailyCost {
+  /** UTC day, `YYYY-MM-DD`. */
+  date: string
+  totalCostUsd: number
+  byModel: Record<string, number>
+}
+
+export interface CostReport {
+  totals: CostTotals
+  byModel: CostBreakdownRow[]
+  byPipeline: CostBreakdownRow[]
+  models: string[]
+  daily: DailyCost[]
+}
