@@ -1,0 +1,20 @@
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+
+export const routes: RouteRecordRaw[] = [
+  {
+    path: '/',
+    name: 'overview',
+    component: () => import('@/features/overview/OverviewPage.vue'),
+    meta: { title: 'Overview' },
+  },
+]
+
+export const router = createRouter({
+  history: createWebHistory(),
+  routes,
+})
+
+router.afterEach((to) => {
+  const title = to.meta.title as string | undefined
+  document.title = title ? `${title} · AI Ops Dashboard` : 'AI Ops Dashboard'
+})

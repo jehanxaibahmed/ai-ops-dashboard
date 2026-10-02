@@ -8,13 +8,28 @@
 
 When AI pipelines run in production, operations teams need to see what's happening: which jobs are running, which failed, how much each model costs and how accurate the results are. This dashboard streams live updates from a .NET backend with SignalR.
 
-## 🧱 Planned stack
+## 🧱 Stack
 
-- Vue 3, TypeScript and Vite
+- Vue 3, TypeScript, Vite, Pinia and Vue Router
 - SignalR for live updates
-- ASP.NET Core backend with background jobs
+- ASP.NET Core (.NET 10) backend with background jobs
 - Chart library for cost and accuracy trends
 - Docker Compose for local setup
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the folder layout and layer rules.
+
+## 🚀 Running locally
+
+```bash
+# Backend (http://localhost:5080)
+cd backend
+dotnet run --project src/AiOps.Api
+
+# Frontend (http://localhost:5173, proxies /api and /hubs to the backend)
+cd frontend
+npm install
+npm run dev
+```
 
 ## 🗺️ Roadmap
 
@@ -27,7 +42,7 @@ When AI pipelines run in production, operations teams need to see what's happeni
 
 ## 📌 Status
 
-🚧 This project is in early development. Code is coming soon. It uses synthetic sample data only.
+🚧 This project is in early development. It uses synthetic sample data only.
 
 ---
 
