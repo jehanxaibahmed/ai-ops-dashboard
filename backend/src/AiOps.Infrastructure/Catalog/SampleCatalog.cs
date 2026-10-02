@@ -16,10 +16,14 @@ public sealed class SampleCatalog : ICatalog
 
     public IReadOnlyList<Pipeline> Pipelines { get; } =
     [
-        new("invoice-extraction", "Invoice extraction", "Pulls supplier, totals and line items from invoices.", ["claude-sonnet", "gpt-mini"]),
-        new("contract-review", "Contract review", "Flags risky clauses and extracts key dates.", ["claude-sonnet", "claude-haiku"]),
-        new("support-triage", "Support triage", "Classifies and routes inbound support tickets.", ["claude-haiku", "gemini-flash"]),
-        new("receipt-ocr", "Receipt OCR", "Reads merchant, date and amount from receipt photos.", ["gemini-flash", "gpt-mini"]),
+        new("invoice-extraction", "Invoice extraction", "Pulls supplier, totals and line items from invoices.", ["claude-sonnet", "gpt-mini"],
+            ["supplier", "invoice_number", "issue_date", "total", "vat", "line_items"]),
+        new("contract-review", "Contract review", "Flags risky clauses and extracts key dates.", ["claude-sonnet", "claude-haiku"],
+            ["parties", "effective_date", "term", "renewal", "liability_cap", "governing_law"]),
+        new("support-triage", "Support triage", "Classifies and routes inbound support tickets.", ["claude-haiku", "gemini-flash"],
+            ["category", "priority", "sentiment", "language"]),
+        new("receipt-ocr", "Receipt OCR", "Reads merchant, date and amount from receipt photos.", ["gemini-flash", "gpt-mini"],
+            ["merchant", "date", "total", "currency"]),
     ];
 
     public AiModel? FindModel(string id) => Models.FirstOrDefault(m => m.Id == id);

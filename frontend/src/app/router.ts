@@ -25,6 +25,12 @@ export const routes: RouteRecordRaw[] = [
     component: () => import('@/features/costs/CostsPage.vue'),
     meta: { title: 'Costs' },
   },
+  {
+    path: '/accuracy',
+    name: 'accuracy',
+    component: () => import('@/features/accuracy/AccuracyPage.vue'),
+    meta: { title: 'Accuracy' },
+  },
 ]
 
 export const router = createRouter({

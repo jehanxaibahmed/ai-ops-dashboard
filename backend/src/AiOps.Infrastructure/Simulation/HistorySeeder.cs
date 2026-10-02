@@ -9,6 +9,7 @@ namespace AiOps.Infrastructure.Simulation;
 /// <summary>Fills the store with finished jobs from the last few days so trends have data on first load.</summary>
 public sealed class HistorySeeder(
     IJobRepository jobs,
+    IEvaluationRepository evaluations,
     ICatalog catalog,
     TimeProvider clock,
     IOptions<SimulationOptions> options,
@@ -21,6 +22,7 @@ public sealed class HistorySeeder(
 
         var random = opts.RandomSeed is { } seed ? new Random(seed) : new Random(42);
         var factory = new JobFactory(catalog, random);
+        var evaluator = new SampleEvaluator(catalog, random);
         var now = clock.GetUtcNow();
         var start = now.AddDays(-opts.HistoryDays);
         // Stop a few minutes short of now so every seeded job has finished before the live simulator starts.
@@ -43,6 +45,8 @@ public sealed class HistorySeeder(
                 job.Succeed(finishedAt);
 
             await jobs.AddAsync(job, cancellationToken);
+            if (job.Status == JobStatus.Succeeded && evaluator.Evaluate(job, finishedAt, now) is { } evaluation)
+                await evaluations.AddAsync(evaluation, cancellationToken);
         }
 
         logger.LogInformation("Seeded {Count} historical jobs over {Days} days.", total, opts.HistoryDays);

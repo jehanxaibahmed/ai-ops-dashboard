@@ -15,6 +15,7 @@ public static class DependencyInjection
 
         services.AddSingleton<ICatalog, SampleCatalog>();
         services.AddSingleton<IJobRepository, InMemoryJobRepository>();
+        services.AddSingleton<IEvaluationRepository, InMemoryEvaluationRepository>();
 
         // Seeder must be registered before the simulator so history exists before live jobs start.
         services.AddHostedService<HistorySeeder>();

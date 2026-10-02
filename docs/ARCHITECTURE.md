@@ -58,6 +58,7 @@ The backend publishes job changes through `IJobNotifier`. The SignalR adapter pu
 | POST | `/api/jobs/retry` | Bulk retry `{ jobIds: [] }`. Returns `retried` and `skipped` with reasons |
 | GET | `/api/failures/breakdown` | Failures grouped by error code and failure rate per pipeline |
 | GET | `/api/analytics/costs` | Spend totals, by model, by pipeline and per UTC day by model |
+| GET | `/api/analytics/accuracy` | Field-weighted accuracy overall, per pipeline or model (`groupBy`), per day, and the most-missed fields |
 | WS | `/hubs/jobs` | SignalR. Server sends `JobUpdated(job)` on every change |
 
 ## Demo mode
@@ -76,3 +77,9 @@ Charts use Chart.js through `vue-chartjs`, wrapped in `shared/components/charts/
 - A model's colour comes from its position in the catalog, not its rank, so filtering never repaints the remaining series.
 - Every chart sits in a `ChartCard` with a **Table** view. The table is the accessible fallback, and it is needed because two light-mode colours are below 3:1 contrast.
 - `useChartTheme` re-reads the tokens when the OS colour scheme changes.
+
+## Evaluations
+
+Each succeeded job gets an `EvaluationResult`: the pipeline's fields that were checked and the ones the model got wrong. Accuracy is field-weighted (correct fields / checked fields).
+
+`SampleEvaluator` gives each field a chance of being right that depends on the model, the pipeline and the field. It also builds in a regression: Gemini Flash is 12 points worse over the last 4 days. That gives the demo a visible drop to investigate on the Accuracy page.

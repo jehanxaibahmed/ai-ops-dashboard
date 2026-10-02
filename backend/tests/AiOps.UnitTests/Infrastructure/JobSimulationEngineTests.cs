@@ -12,6 +12,7 @@ namespace AiOps.UnitTests.Infrastructure;
 public class JobSimulationEngineTests
 {
     private readonly InMemoryJobRepository _repo = new();
+    private readonly InMemoryEvaluationRepository _evaluations = new();
     private readonly RecordingNotifier _notifier = new();
     private readonly FakeTimeProvider _clock = new(Jobs.T0);
 
@@ -19,7 +20,7 @@ public class JobSimulationEngineTests
     {
         var options = new SimulationOptions { RandomSeed = 7, ArrivalRate = 1.0, MaxConcurrentJobs = 3 };
         configure?.Invoke(options);
-        return new JobSimulationEngine(_repo, _notifier, new SampleCatalog(), _clock, Options.Create(options));
+        return new JobSimulationEngine(_repo, _evaluations, _notifier, new SampleCatalog(), _clock, Options.Create(options));
     }
 
     private async Task RunTicks(JobSimulationEngine engine, int ticks)
@@ -82,5 +83,18 @@ public class JobSimulationEngineTests
 
         var created = Assert.Single(await _repo.QueryAsync(JobFilter.All));
         Assert.Contains(_notifier.Sent, j => j.Id == created.Id);
+    }
+
+    [Fact]
+    public async Task Each_succeeded_job_gets_one_evaluation()
+    {
+        var engine = CreateEngine(o => o.FailureRate = 0);
+
+        await RunTicks(engine, 40);
+
+        var succeeded = await _repo.QueryAsync(new JobFilter { Statuses = [JobStatus.Succeeded] });
+        var evaluations = await _evaluations.QueryAsync(JobFilter.All);
+        Assert.NotEmpty(succeeded);
+        Assert.Equal(succeeded.Select(j => j.Id).Order(), evaluations.Select(e => e.JobId).Order());
     }
 }
