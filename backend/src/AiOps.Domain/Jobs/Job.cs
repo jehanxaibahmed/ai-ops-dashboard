@@ -3,16 +3,12 @@ using AiOps.Domain.Common;
 namespace AiOps.Domain.Jobs;
 
 /// <summary>
-/// One unit of work in an AI pipeline, such as extracting fields from a document.
-/// Status moves Queued → Running → Succeeded | Failed. A failed job can be retried,
-/// which puts it back in the queue as a new attempt.
+/// One unit of work in an AI pipeline.
 /// </summary>
 public sealed class Job
 {
-    /// <summary>Total attempts allowed, including the first one.</summary>
     public const int MaxAttempts = 5;
 
-    // Usage from earlier attempts. Retries still cost money, so totals keep growing.
     private long _priorInputTokens;
     private long _priorOutputTokens;
     private decimal _priorCostUsd;
@@ -22,6 +18,10 @@ public sealed class Job
     public string Model { get; }
     public string DocumentName { get; }
     public DateTimeOffset CreatedAt { get; }
+    
+    public string SystemInstructions { get; private set; }
+    public string Prompt { get; private set; }
+    public string? Response { get; private set; }
 
     public JobStatus Status { get; private set; }
     public int Progress { get; private set; }
@@ -35,7 +35,7 @@ public sealed class Job
     public long OutputTokens { get; private set; }
     public decimal CostUsd { get; private set; }
 
-    public Job(Guid id, string pipelineId, string model, string documentName, DateTimeOffset createdAt)
+    public Job(Guid id, string pipelineId, string model, string documentName, string systemInstructions, string prompt, DateTimeOffset createdAt)
     {
         if (string.IsNullOrWhiteSpace(pipelineId)) throw new DomainException("Pipeline is required.");
         if (string.IsNullOrWhiteSpace(model)) throw new DomainException("Model is required.");
@@ -44,6 +44,8 @@ public sealed class Job
         PipelineId = pipelineId;
         Model = model;
         DocumentName = documentName;
+        SystemInstructions = systemInstructions ?? string.Empty;
+        Prompt = prompt ?? string.Empty;
         CreatedAt = createdAt;
         UpdatedAt = createdAt;
         Status = JobStatus.Queued;
@@ -66,14 +68,12 @@ public sealed class Job
         UpdatedAt = now;
     }
 
-    /// <summary>Records progress and usage for the current attempt. Usage values are for this attempt only.</summary>
     public void ReportProgress(int progress, long inputTokens, long outputTokens, decimal costUsd, DateTimeOffset now)
     {
         EnsureStatus(JobStatus.Running, "report progress on");
         if (inputTokens < 0 || outputTokens < 0 || costUsd < 0)
             throw new DomainException("Usage values cannot be negative.");
 
-        // Progress never goes backwards and stays below 100 until the job completes.
         Progress = Math.Clamp(Math.Max(Progress, progress), 0, 99);
         InputTokens = _priorInputTokens + inputTokens;
         OutputTokens = _priorOutputTokens + outputTokens;
@@ -81,12 +81,13 @@ public sealed class Job
         UpdatedAt = now;
     }
 
-    public void Succeed(DateTimeOffset now)
+    public void Succeed(string response, DateTimeOffset now)
     {
         EnsureStatus(JobStatus.Running, "complete");
         Status = JobStatus.Succeeded;
         Progress = 100;
         Failure = null;
+        Response = response;
         CompletedAt = now;
         UpdatedAt = now;
     }
@@ -101,7 +102,6 @@ public sealed class Job
         UpdatedAt = now;
     }
 
-    /// <summary>Puts a failed job back in the queue as a new attempt.</summary>
     public void Retry(DateTimeOffset now)
     {
         EnsureStatus(JobStatus.Failed, "retry");

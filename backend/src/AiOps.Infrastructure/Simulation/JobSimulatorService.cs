@@ -1,16 +1,14 @@
 using AiOps.Application.Abstractions;
+using AiOps.Domain.Jobs;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace AiOps.Infrastructure.Simulation;
 
-/// <summary>
-/// Runs <see cref="JobSimulationEngine"/> on a timer. The loop always runs; pausing demo mode
-/// skips ticks, and changing speed shortens or lengthens the tick period.
-/// </summary>
 public sealed class JobSimulatorService(
-    JobSimulationEngine engine,
+    IJobRepository jobs,
+    ICatalog catalog,
     ISimulationControl control,
     IOptions<SimulationOptions> options,
     TimeProvider clock,
@@ -22,7 +20,9 @@ public sealed class JobSimulatorService(
         void OnChanged(SimulationState s) => timer.Period = PeriodFor(s.Speed);
         control.Changed += OnChanged;
 
-        logger.LogInformation("Job simulator started (running: {Running}).", control.State.Running);
+        logger.LogInformation("Job generator started (running: {Running}).", control.State.Running);
+        var random = new Random();
+
         try
         {
             while (await timer.WaitForNextTickAsync(stoppingToken))
@@ -30,11 +30,30 @@ public sealed class JobSimulatorService(
                 if (!control.State.Running) continue;
                 try
                 {
-                    await engine.TickAsync(stoppingToken);
+                    if (random.NextDouble() < control.State.ArrivalRate)
+                    {
+                        var pipeline = catalog.Pipelines[random.Next(catalog.Pipelines.Count)];
+                        var model = pipeline.Models[random.Next(pipeline.Models.Count)];
+                        var docName = SampleDocuments.Name(pipeline.Id, random);
+                        
+                        var prompt = $"Please extract information from {docName} according to the rules of {pipeline.Name}.";
+                        var systemInstructions = "You are an AI assistant tasked with extracting structured data from documents.";
+
+                        var job = new Job(
+                            Guid.NewGuid(),
+                            pipeline.Id,
+                            model,
+                            docName,
+                            systemInstructions,
+                            prompt,
+                            clock.GetUtcNow());
+
+                        await jobs.AddAsync(job, stoppingToken);
+                    }
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)
                 {
-                    logger.LogError(ex, "Simulator tick failed.");
+                    logger.LogError(ex, "Generator tick failed.");
                 }
             }
         }
