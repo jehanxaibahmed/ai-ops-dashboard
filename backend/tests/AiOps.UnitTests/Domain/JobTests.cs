@@ -55,7 +55,7 @@ public class JobTests
     {
         var job = Jobs.New();
 
-        Assert.Throws<DomainException>(() => job.Succeed(Jobs.T0));
+        Assert.Throws<DomainException>(() => job.Succeed("response", Jobs.T0));
     }
 
     [Fact]

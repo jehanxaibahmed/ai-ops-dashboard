@@ -2,6 +2,7 @@ using AiOps.Application.Abstractions;
 using AiOps.Infrastructure.Catalog;
 using AiOps.Infrastructure.Persistence;
 using AiOps.Infrastructure.Simulation;
+using AiOps.Infrastructure.Orchestration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -17,11 +18,12 @@ public static class DependencyInjection
         services.AddSingleton<IJobRepository, InMemoryJobRepository>();
         services.AddSingleton<IEvaluationRepository, InMemoryEvaluationRepository>();
 
-        // Seeder must be registered before the simulator so history exists before live jobs start.
-        services.AddHostedService<HistorySeeder>();
         services.AddSingleton<ISimulationControl, SimulationControl>();
-        services.AddSingleton<JobSimulationEngine>();
+        services.AddHostedService<HistorySeeder>();
         services.AddHostedService<JobSimulatorService>();
+
+        services.AddSingleton<ILLMProvider, LLMProvider>();
+        services.AddHostedService<OrchestratorBackgroundService>();
 
         return services;
     }

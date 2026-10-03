@@ -21,7 +21,10 @@ public sealed record JobDto(
     long OutputTokens,
     decimal CostUsd,
     JobFailureDto? Failure,
-    bool CanRetry)
+    bool CanRetry,
+    string? SystemInstructions = null,
+    string? Prompt = null,
+    string? Response = null)
 {
     public static JobDto From(Job job) => new(
         job.Id,
@@ -40,5 +43,8 @@ public sealed record JobDto(
         job.OutputTokens,
         job.CostUsd,
         job.Failure is { } f ? new JobFailureDto(f.Code, f.Message, f.IsTransient) : null,
-        job.CanRetry);
+        job.CanRetry,
+        job.SystemInstructions,
+        job.Prompt,
+        job.Response);
 }

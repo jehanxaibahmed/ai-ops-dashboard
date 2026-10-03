@@ -11,14 +11,14 @@ public static class Jobs
         string model = "claude-sonnet",
         DateTimeOffset? createdAt = null,
         string document = "INV-1.pdf") =>
-        new(Guid.NewGuid(), pipeline, model, document, createdAt ?? T0);
+        new(Guid.NewGuid(), pipeline, model, document, "", "", createdAt ?? T0);
 
     public static Job Succeeded(DateTimeOffset? createdAt = null, decimal cost = 0.01m, string pipeline = "invoice-extraction", string model = "claude-sonnet")
     {
         var job = New(pipeline, model, createdAt);
         job.Start(job.CreatedAt.AddSeconds(1));
         job.ReportProgress(50, 1000, 100, cost, job.CreatedAt.AddSeconds(5));
-        job.Succeed(job.CreatedAt.AddSeconds(11));
+        job.Succeed("response", job.CreatedAt.AddSeconds(11));
         return job;
     }
 
