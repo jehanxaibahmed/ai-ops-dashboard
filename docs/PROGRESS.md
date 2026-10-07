@@ -16,7 +16,7 @@ The work is split into **stacked PRs**. Each branch is cut from the one before i
 | 4 | `feat/04-failures-retry` | [#4](https://github.com/jehanxaibahmed/ai-ops-dashboard/pull/4) | Failure view with retry actions |
 | 5 | `feat/05-cost-analytics` | [#5](https://github.com/jehanxaibahmed/ai-ops-dashboard/pull/5) | Cost per model and per day |
 | 6 | `feat/06-accuracy-trends` | [#6](https://github.com/jehanxaibahmed/ai-ops-dashboard/pull/6) | Accuracy trends from evaluation results |
-| 7 | `feat/07-filters-demo-mode` | [#7](https://github.com/jehanxaibahmed/ai-ops-dashboard/pull/7) | Global URL filters and demo-mode controls |
+| 7 | `feat/07-filters-showcase-mode` | [#7](https://github.com/jehanxaibahmed/ai-ops-dashboard/pull/7) | Global URL filters and showcase-mode controls |
 | 8 | `chore/08-docker-ci` | [#8](https://github.com/jehanxaibahmed/ai-ops-dashboard/pull/8) | Docker Compose, GitHub Actions CI, final README |
 
 ## Done
@@ -38,14 +38,14 @@ The work is split into **stacked PRs**. Each branch is cut from the one before i
 - The palette passed the colour-blind and normal-vision checks in both light and dark mode.
 
 ### 6 · Accuracy
-- `EvaluationResult` entity, plus a synthetic evaluator. It builds in a Gemini Flash regression of −12 pts over the last 4 days, so the demo has a drop to find.
+- `EvaluationResult` entity, plus a synthetic evaluator. It builds in a Gemini Flash regression of −12 pts over the last 4 days, so the showcase has a drop to find.
 - `GET /api/analytics/accuracy?groupBy=Pipeline|Model`.
 - Accuracy page:
   - trend line chart with a crosshair tooltip
   - table that flags drops of 2 points or more
   - list of the most-missed fields
 
-### 7 · Filters and demo mode
+### 7 · Filters and showcase mode
 - **Backend**
   - `failureCode` filter on all job endpoints. This fixes the old limitation where the error-code filter only covered the loaded page.
   - `ISimulationControl` with running, speed (0.5/1/2/5×) and failure rate.
@@ -59,7 +59,7 @@ The work is split into **stacked PRs**. Each branch is cut from the one before i
   - `MultiSelect` dropdown component.
   - Every page now reads the global filters: Overview, Jobs, Failures, Costs and Accuracy. The local 7/14-day buttons on Costs and Accuracy were removed.
   - The Failures error-code filter now runs on the server.
-  - The sidebar has demo-mode controls (on/off switch, speed, failure rate) that stay in sync across tabs.
+  - The sidebar has showcase-mode controls (on/off switch, speed, failure rate) that stay in sync across tabs.
   - Frontend total: 22 tests passing, clean build.
 
 ### 7 · Follow-up fixes (session 3)
@@ -88,8 +88,8 @@ The work is split into **stacked PRs**. Each branch is cut from the one before i
 - End-to-end smoke tests with Playwright.
 
 ## Known limitations
-- The simulator changes job objects in memory while the API may be reading them. That is acceptable for an in-memory demo; a database adapter would remove it.
-- Retried jobs stay `Queued` while demo mode is paused. That is expected.
+- The simulator changes job objects in memory while the API may be reading them. That is acceptable for an in-memory showcase; a database adapter would remove it.
+- Retried jobs stay `Queued` while showcase mode is paused. That is expected.
 - The `24h` range is computed when the filters change. It does not roll forward while a page stays open.
 
 ## Running locally

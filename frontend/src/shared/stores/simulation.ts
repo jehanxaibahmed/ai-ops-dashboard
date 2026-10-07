@@ -8,7 +8,7 @@ import { useToastStore } from './toasts'
 export const SPEEDS = [0.5, 1, 2, 5] as const
 export const FAILURE_RATES = [0.05, 0.12, 0.3] as const
 
-/** Demo-mode state, shared across tabs through SignalR. */
+/** showcase-mode state, shared across tabs through SignalR. */
 export const useSimulationStore = defineStore('simulation', () => {
   const state = ref<SimulationState | null>(null)
   const saving = ref(false)
@@ -31,7 +31,7 @@ export const useSimulationStore = defineStore('simulation', () => {
     try {
       state.value = await updateSimulation(patch)
     } catch (e) {
-      useToastStore().push(e instanceof Error ? e.message : 'Could not update demo mode', 'danger')
+      useToastStore().push(e instanceof Error ? e.message : 'Could not update showcase mode', 'danger')
     } finally {
       saving.value = false
     }

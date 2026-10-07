@@ -2,10 +2,10 @@ namespace AiOps.Application.Abstractions;
 
 public sealed record SimulationState(bool Running, double Speed, double FailureRate, double ArrivalRate);
 
-/// <summary>Patch for the demo simulator. Null fields are left unchanged.</summary>
+/// <summary>Patch for the showcase simulator. Null fields are left unchanged.</summary>
 public sealed record SimulationUpdate(bool? Running, double? Speed, double? FailureRate);
 
-/// <summary>Runtime controls for demo mode.</summary>
+/// <summary>Runtime controls for showcase mode.</summary>
 public interface ISimulationControl
 {
     SimulationState State { get; }
@@ -17,7 +17,7 @@ public interface ISimulationControl
     event Action<SimulationState>? Changed;
 }
 
-/// <summary>Pushes demo-mode changes to live clients.</summary>
+/// <summary>Pushes showcase-mode changes to live clients.</summary>
 public interface ISimulationNotifier
 {
     Task SimulationChangedAsync(SimulationState state, CancellationToken ct = default);

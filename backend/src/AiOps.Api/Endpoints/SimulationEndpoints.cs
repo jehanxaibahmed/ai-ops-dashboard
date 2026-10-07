@@ -6,7 +6,7 @@ public static class SimulationEndpoints
 {
     public static IEndpointRouteBuilder MapSimulationEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/simulation").WithTags("Demo mode");
+        var group = app.MapGroup("/api/simulation").WithTags("showcase mode");
 
         group.MapGet("/", (ISimulationControl control) => Results.Ok(control.State))
             .WithName("GetSimulation");

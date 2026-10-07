@@ -6,7 +6,7 @@ namespace AiOps.Infrastructure.Persistence;
 
 /// <summary>
 /// Thread-safe in-memory store. Keeps at most <see cref="Capacity"/> jobs and drops the
-/// oldest finished ones first, so a long-running demo does not grow without bound.
+/// oldest finished ones first, so a long-running showcase does not grow without bound.
 /// </summary>
 public sealed class InMemoryJobRepository : IJobRepository
 {

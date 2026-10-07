@@ -1,6 +1,6 @@
 # 📊 AI Ops Dashboard
 
-![Status](https://img.shields.io/badge/status-demo%20ready-brightgreen?style=for-the-badge) ![Vue.js](https://img.shields.io/badge/Vue.js-4FC08D?style=for-the-badge&logo=vuedotjs&logoColor=white) ![.NET](https://img.shields.io/badge/.NET%2010-512BD4?style=for-the-badge&logo=dotnet&logoColor=white) ![SignalR](https://img.shields.io/badge/SignalR-512BD4?style=for-the-badge&logo=dotnet&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Status](https://img.shields.io/badge/status-showcase%20ready-brightgreen?style=for-the-badge) ![Vue.js](https://img.shields.io/badge/Vue.js-4FC08D?style=for-the-badge&logo=vuedotjs&logoColor=white) ![.NET](https://img.shields.io/badge/.NET%2010-512BD4?style=for-the-badge&logo=dotnet&logoColor=white) ![SignalR](https://img.shields.io/badge/SignalR-512BD4?style=for-the-badge&logo=dotnet&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
 > A live dashboard for monitoring AI processing pipelines: job status, model cost and extraction accuracy in real time.
 
@@ -21,7 +21,7 @@ It uses **synthetic sample data only**. A built-in simulator generates jobs, fai
 | **Costs** | Spend per day stacked by model, cost per model and pipeline, and how much went on failed jobs. |
 | **Accuracy** | Field-level accuracy trends from evaluation results, with recent drops flagged and the most-missed fields listed. |
 | **Filters** | Date range, pipeline, model and search. The filters live in the URL, so any view can be linked, and they apply on every page. |
-| **Demo mode** | Pause or resume the simulator, change its speed (0.5–5×) and failure rate from the sidebar. Changes sync to every open tab. |
+| **showcase mode** | Pause or resume the simulator, change its speed (0.5–5×) and failure rate from the sidebar. Changes sync to every open tab. |
 
 <table>
   <tr>
@@ -90,7 +90,7 @@ Dependencies point inwards (`Api → Infrastructure → Application → Domain`)
 - [x] Cost per model and per day
 - [x] Accuracy trends from evaluation results
 - [x] Filters by pipeline and date
-- [x] Demo mode with simulated jobs
+- [x] showcase mode with simulated jobs
 
 Possible next steps:
 - A database-backed store to replace the in-memory one

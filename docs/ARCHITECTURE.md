@@ -59,11 +59,11 @@ The backend publishes job changes through `IJobNotifier`. The SignalR adapter pu
 | GET | `/api/failures/breakdown` | Failures grouped by error code and failure rate per pipeline |
 | GET | `/api/analytics/costs` | Spend totals, by model, by pipeline and per UTC day by model |
 | GET | `/api/analytics/accuracy` | Field-weighted accuracy overall, per pipeline or model (`groupBy`), per day, and the most-missed fields |
-| GET | `/api/simulation` | Demo-mode state: running, speed, failure rate |
+| GET | `/api/simulation` | showcase-mode state: running, speed, failure rate |
 | PATCH | `/api/simulation` | Update any of `running`, `speed` (0.5/1/2/5), `failureRate` (0–0.9). `400` on invalid values |
-| WS | `/hubs/jobs` | SignalR. Server sends `JobUpdated(job)` on every job change and `SimulationChanged(state)` on demo-mode changes |
+| WS | `/hubs/jobs` | SignalR. Server sends `JobUpdated(job)` on every job change and `SimulationChanged(state)` on showcase-mode changes |
 
-## Demo mode
+## showcase mode
 
 `JobSimulationEngine` is a timer-free state machine driven by `JobSimulatorService`. On startup `HistorySeeder` writes 14 days of finished jobs so charts have data. Both are configured under `Simulation` in `appsettings.json`.
 
@@ -86,7 +86,7 @@ Charts use Chart.js through `vue-chartjs`, wrapped in `shared/components/charts/
 
 Each succeeded job gets an `EvaluationResult`: the pipeline's fields that were checked and the ones the model got wrong. Accuracy is field-weighted (correct fields / checked fields).
 
-`SampleEvaluator` gives each field a chance of being right that depends on the model, the pipeline and the field. It also builds in a regression: Gemini Flash is 12 points worse over the last 4 days. That gives the demo a visible drop to investigate on the Accuracy page.
+`SampleEvaluator` gives each field a chance of being right that depends on the model, the pipeline and the field. It also builds in a regression: Gemini Flash is 12 points worse over the last 4 days. That gives the showcase a visible drop to investigate on the Accuracy page.
 
 ## Filters
 

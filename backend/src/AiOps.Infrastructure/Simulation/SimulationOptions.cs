@@ -4,7 +4,7 @@ public sealed class SimulationOptions
 {
     public const string SectionName = "Simulation";
 
-    /// <summary>Run the live job simulator (demo mode).</summary>
+    /// <summary>Run the live job simulator (showcase mode).</summary>
     public bool Enabled { get; set; } = true;
 
     /// <summary>Seed historical jobs on startup so charts have data.</summary>

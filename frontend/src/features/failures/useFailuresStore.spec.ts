@@ -18,15 +18,15 @@ describe('useFailuresStore', () => {
   })
 
   it('sends the error code to the API and clears selection when it changes', () => {
-    const fetchMock = vi.fn((_input: string) => new Promise<Response>(() => {}))
-    vi.stubGlobal('fetch', fetchMock)
+    const fetchsimulator = vi.fn((_input: string) => new Promise<Response>(() => {}))
+    vi.stubGlobal('fetch', fetchsimulator)
     const store = useFailuresStore()
     store.toggle('a')
 
     void store.setCode('rate_limited')
 
     expect(store.selection.size).toBe(0)
-    expect(String(fetchMock.mock.calls[0]?.[0])).toContain('failureCode=rate_limited')
+    expect(String(fetchsimulator.simulator.calls[0]?.[0])).toContain('failureCode=rate_limited')
     vi.unstubAllGlobals()
   })
 

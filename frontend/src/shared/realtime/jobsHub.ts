@@ -68,7 +68,7 @@ export function onJobUpdated(listener: JobListener, onReconnected?: ReconnectLis
   }
 }
 
-/** Subscribe to demo-mode changes made from any tab. */
+/** Subscribe to showcase-mode changes made from any tab. */
 export function onSimulationChanged(listener: (state: SimulationState) => void): () => void {
   simulationListeners.add(listener)
   void start()
