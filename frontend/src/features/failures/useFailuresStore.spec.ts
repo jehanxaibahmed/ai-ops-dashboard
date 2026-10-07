@@ -18,15 +18,18 @@ describe('useFailuresStore', () => {
   })
 
   it('sends the error code to the API and clears selection when it changes', () => {
-    const fetchsimulator = vi.fn((_input: string) => new Promise<Response>(() => {}))
-    vi.stubGlobal('fetch', fetchsimulator)
+    const urls: string[] = []
+    vi.stubGlobal('fetch', (input: RequestInfo | URL) => {
+      urls.push(String(input))
+      return new Promise<Response>(() => {})
+    })
     const store = useFailuresStore()
     store.toggle('a')
 
     void store.setCode('rate_limited')
 
     expect(store.selection.size).toBe(0)
-    expect(String(fetchsimulator.simulator.calls[0]?.[0])).toContain('failureCode=rate_limited')
+    expect(urls[0]).toContain('failureCode=rate_limited')
     vi.unstubAllGlobals()
   })
 
