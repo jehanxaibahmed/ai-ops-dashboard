@@ -5,12 +5,13 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.AI;
 using System.Collections.Generic;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AiOps.Infrastructure.Orchestration;
 
 public class OrchestratorBackgroundService : BackgroundService
 {
-    private readonly IJobRepository _jobs;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILLMProvider _llmProvider;
     private readonly ICatalog _catalog;
     private readonly IJobNotifier _notifier;
@@ -18,14 +19,14 @@ public class OrchestratorBackgroundService : BackgroundService
     private readonly TimeProvider _clock;
 
     public OrchestratorBackgroundService(
-        IJobRepository jobs,
+        IServiceScopeFactory scopeFactory,
         ILLMProvider llmProvider,
         ICatalog catalog,
         IJobNotifier notifier,
         ILogger<OrchestratorBackgroundService> logger,
         TimeProvider clock)
     {
-        _jobs = jobs;
+        _scopeFactory = scopeFactory;
         _llmProvider = llmProvider;
         _catalog = catalog;
         _notifier = notifier;
@@ -41,10 +42,12 @@ public class OrchestratorBackgroundService : BackgroundService
         {
             try
             {
+                using var scope = _scopeFactory.CreateScope();
+                var _jobs = scope.ServiceProvider.GetRequiredService<IJobRepository>();
                 var queuedJobs = await _jobs.QueryAsync(new JobFilter { Statuses = [JobStatus.Queued] }, stoppingToken);
                 foreach (var job in queuedJobs)
                 {
-                    await ProcessJobAsync(job, stoppingToken);
+                    await ProcessJobAsync(_jobs, job, stoppingToken);
                 }
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
@@ -54,7 +57,7 @@ public class OrchestratorBackgroundService : BackgroundService
         }
     }
 
-    private async Task ProcessJobAsync(Job job, CancellationToken ct)
+    private async Task ProcessJobAsync(IJobRepository _jobs, Job job, CancellationToken ct)
     {
         var now = _clock.GetUtcNow();
         job.Start(now);

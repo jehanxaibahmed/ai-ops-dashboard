@@ -8,21 +8,19 @@ public sealed class SampleCatalog : ICatalog
 {
     public IReadOnlyList<AiModel> Models { get; } =
     [
-        new("claude-sonnet", "Claude Sonnet", "Anthropic", new ModelPricing(3.00m, 15.00m)),
-        new("claude-haiku", "Claude Haiku", "Anthropic", new ModelPricing(1.00m, 5.00m)),
-        new("gpt-mini", "GPT Mini", "OpenAI", new ModelPricing(0.40m, 1.60m)),
-        new("gemini-flash", "Gemini Flash", "Google", new ModelPricing(0.30m, 2.50m)),
+        new("qwen2.5-coder:14b", "Qwen 2.5 Coder 14B", "Alibaba", new ModelPricing(0.50m, 1.50m)),
+        new("qwen2.5:32b-instruct", "Qwen 2.5 32B Instruct", "Alibaba", new ModelPricing(1.00m, 3.00m))
     ];
 
     public IReadOnlyList<Pipeline> Pipelines { get; } =
     [
-        new("invoice-extraction", "Invoice extraction", "Pulls supplier, totals and line items from invoices.", ["claude-sonnet", "gpt-mini"],
+        new("invoice-extraction", "Invoice extraction", "Pulls supplier, totals and line items from invoices.", ["qwen2.5:32b-instruct", "qwen2.5-coder:14b"],
             ["supplier", "invoice_number", "issue_date", "total", "vat", "line_items"]),
-        new("contract-review", "Contract review", "Flags risky clauses and extracts key dates.", ["claude-sonnet", "claude-haiku"],
+        new("contract-review", "Contract review", "Flags risky clauses and extracts key dates.", ["qwen2.5:32b-instruct", "qwen2.5-coder:14b"],
             ["parties", "effective_date", "term", "renewal", "liability_cap", "governing_law"]),
-        new("support-triage", "Support triage", "Classifies and routes inbound support tickets.", ["claude-haiku", "gemini-flash"],
+        new("support-triage", "Support triage", "Classifies and routes inbound support tickets.", ["qwen2.5:32b-instruct", "qwen2.5-coder:14b"],
             ["category", "priority", "sentiment", "language"]),
-        new("receipt-ocr", "Receipt OCR", "Reads merchant, date and amount from receipt photos.", ["gemini-flash", "gpt-mini"],
+        new("receipt-ocr", "Receipt OCR", "Reads merchant, date and amount from receipt photos.", ["qwen2.5:32b-instruct", "qwen2.5-coder:14b"],
             ["merchant", "date", "total", "currency"]),
     ];
 

@@ -13,11 +13,11 @@ public sealed class Job
     private long _priorOutputTokens;
     private decimal _priorCostUsd;
 
-    public Guid Id { get; }
-    public string PipelineId { get; }
-    public string Model { get; }
-    public string DocumentName { get; }
-    public DateTimeOffset CreatedAt { get; }
+    public Guid Id { get; private set; }
+    public string PipelineId { get; private set; }
+    public string Model { get; private set; }
+    public string DocumentName { get; private set; }
+    public DateTimeOffset CreatedAt { get; private set; }
     
     public string SystemInstructions { get; private set; }
     public string Prompt { get; private set; }

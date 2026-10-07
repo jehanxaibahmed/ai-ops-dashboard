@@ -3,11 +3,12 @@ using AiOps.Domain.Jobs;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AiOps.Infrastructure.Simulation;
 
 public sealed class JobSimulatorService(
-    IJobRepository jobs,
+    IServiceScopeFactory scopeFactory,
     ICatalog catalog,
     ISimulationControl control,
     IOptions<SimulationOptions> options,
@@ -48,6 +49,8 @@ public sealed class JobSimulatorService(
                             prompt,
                             clock.GetUtcNow());
 
+                        using var scope = scopeFactory.CreateScope();
+                        var jobs = scope.ServiceProvider.GetRequiredService<IJobRepository>();
                         await jobs.AddAsync(job, stoppingToken);
                     }
                 }

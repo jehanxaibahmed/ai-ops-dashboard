@@ -39,6 +39,13 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AiOps.Infrastructure.Persistence.AiOpsDbContext>();
+    Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.AsNoTracking(db.Jobs); // just a hack to not add a using statement at the top for now, wait better to use db.Database.Migrate();
+    Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.Migrate(db.Database);
+}
+
 app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
@@ -54,6 +61,7 @@ app.MapJobEndpoints();
 app.MapFailureEndpoints();
 app.MapAnalyticsEndpoints();
 app.MapSimulationEndpoints();
+app.MapOpenAiProxyEndpoints();
 app.MapHub<JobsHub>(JobsHub.Route);
 
 app.Run();
