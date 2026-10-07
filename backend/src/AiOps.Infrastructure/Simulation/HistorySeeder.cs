@@ -1,6 +1,7 @@
 using AiOps.Application.Abstractions;
 using AiOps.Domain.Evaluations;
 using AiOps.Domain.Jobs;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -9,8 +10,12 @@ using System.Linq;
 
 namespace AiOps.Infrastructure.Simulation;
 
+/// <summary>
+/// Seeds deterministic job history. Not registered by the production host;
+/// used only as a fixture by the integration tests.
+/// </summary>
 public sealed class HistorySeeder(
-    IJobRepository jobs,
+    IServiceScopeFactory scopeFactory,
     IEvaluationRepository evaluations,
     ICatalog catalog,
     TimeProvider clock,
@@ -21,6 +26,9 @@ public sealed class HistorySeeder(
     {
         var opts = options.Value;
         if (!opts.SeedHistory) return;
+
+        using var scope = scopeFactory.CreateScope();
+        var jobs = scope.ServiceProvider.GetRequiredService<IJobRepository>();
 
         var random = opts.RandomSeed is { } seed ? new Random(seed) : new Random(42);
         var now = clock.GetUtcNow();
@@ -35,7 +43,7 @@ public sealed class HistorySeeder(
                 Guid.NewGuid(),
                 pipeline.Id,
                 model,
-                $"doc-{i}.pdf",
+                SampleDocuments.Name(pipeline.Id, random),
                 "sys",
                 "prompt",
                 now.AddDays(-random.NextDouble() * opts.HistoryDays)
@@ -45,15 +53,18 @@ public sealed class HistorySeeder(
             
             if (random.NextDouble() < opts.FailureRate)
             {
-                job.Fail(new JobFailure("error", "msg", true), job.CreatedAt.AddSeconds(2));
+                job.Fail(SampleFailures.Pick(random), job.CreatedAt.AddSeconds(2));
             }
             else
             {
                 job.ReportProgress(99, 100, 10, 0.01m, job.CreatedAt.AddSeconds(2));
                 job.Succeed("done", job.CreatedAt.AddSeconds(3));
 
-                var allFields = new[] { "amount", "date", "vendor" };
-                var missed = random.NextDouble() > 0.8 ? new[] { "vendor" } : Array.Empty<string>();
+                var allFields = FieldsFor(pipeline.Id);
+                // Each field is missed independently; the miss rate varies by model so that
+                // accuracy grouped by model differs, while staying deterministic per seed.
+                var missRate = 0.05 + 0.04 * (job.Model.Sum(c => c) % 4);
+                var missed = allFields.Where(_ => random.NextDouble() < missRate).ToArray();
 
                 var eval = new EvaluationResult(
                     Guid.NewGuid(),
@@ -72,6 +83,15 @@ public sealed class HistorySeeder(
 
         logger.LogInformation("Seeded {Count} jobs.", total);
     }
+
+    private static string[] FieldsFor(string pipelineId) => pipelineId switch
+    {
+        "invoice-extraction" => ["invoice_number", "date", "vendor", "total", "currency"],
+        "contract-review" => ["parties", "effective_date", "term", "governing_law"],
+        "support-triage" => ["category", "priority", "customer", "sentiment"],
+        "receipt-ocr" => ["merchant", "date", "total"],
+        _ => ["amount", "date", "vendor"],
+    };
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }
