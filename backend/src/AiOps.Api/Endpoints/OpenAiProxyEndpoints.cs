@@ -34,8 +34,9 @@ public static class OpenAiProxyEndpoints
         var lastMessage = request.Messages.LastOrDefault();
         var prompt = lastMessage?.Content ?? string.Empty;
 
+        var actualModel = "qwen2.5-coder:14b";
         var now = clock.GetUtcNow();
-        var job = new Job(Guid.NewGuid(), "OpenAIProxy", request.Model, "ProxyRequest", systemInstructions, prompt, now);
+        var job = new Job(Guid.NewGuid(), "OpenAIProxy", actualModel, "ProxyRequest", systemInstructions, prompt, now);
         
         await jobRepository.AddAsync(job, ct);
 
@@ -44,7 +45,6 @@ public static class OpenAiProxyEndpoints
 
         try
         {
-            var actualModel = "qwen2.5-coder:14b";
             var client = llmProvider.GetClient(actualModel);
             var aiMessages = request.Messages.Select(m => 
                 new ChatMessage(new ChatRole(m.Role), m.Content)

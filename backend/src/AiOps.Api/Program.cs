@@ -42,8 +42,18 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AiOps.Infrastructure.Persistence.AiOpsDbContext>();
-    Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.AsNoTracking(db.Jobs); // just a hack to not add a using statement at the top for now, wait better to use db.Database.Migrate();
-    Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.Migrate(db.Database);
+    for (var attempt = 1; attempt <= 10; attempt++)
+    {
+        try
+        {
+            Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.Migrate(db.Database);
+            break;
+        }
+        catch (Exception) when (attempt < 10)
+        {
+            Thread.Sleep(2000);
+        }
+    }
 }
 
 app.UseExceptionHandler();

@@ -25,7 +25,7 @@ public static class DependencyInjection
 
         services.AddSingleton<ISimulationControl, SimulationControl>();
         // services.AddHostedService<HistorySeeder>();
-        services.AddHostedService<JobSimulatorService>();
+        // services.AddHostedService<JobSimulatorService>();
         services.AddSingleton<ILLMProvider, LLMProvider>();
         services.AddHostedService<OrchestratorBackgroundService>();
 
